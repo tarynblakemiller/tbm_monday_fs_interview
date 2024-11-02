@@ -7,7 +7,7 @@ import { Icon } from "monday-ui-react-core";
 import { Heading } from "monday-ui-react-core/next";
 import "./OrderForm.css";
 
-export const OrderForm = ({ onSubmit, boardId }) => {
+export const OrderForm = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -65,8 +65,11 @@ export const OrderForm = ({ onSubmit, boardId }) => {
               />
             </div>
           </div>
-          <FragranceSelector />
-          <div className="fragrance-selector-container"></div>
+
+          <div className="fragrance-selector-container">
+            {" "}
+            <FragranceSelector />
+          </div>
           <div className="button-container">
             <OrderButton
               className="order-button"

@@ -36,7 +36,7 @@ const FragranceSelector = () => {
   };
 
   return (
-    <div style={{ width: "400px" }}>
+    <div>
       <Dropdown
         value={selectedScents}
         onChange={handleChange}

@@ -7,7 +7,7 @@ import mondaySdk from "monday-sdk-js";
 import "monday-ui-react-core/dist/main.css";
 import { OrderForm } from "./components/Order/OrderForm/OrderForm";
 import { useEffect, useState } from "react";
-import { AttentionBox } from "monday-ui-react-core";
+import "./App.css";
 
 const monday = mondaySdk();
 
@@ -31,7 +31,9 @@ function App() {
 
   return (
     <Fragment>
-      <OrderForm />
+      <div className="container">
+        <OrderForm />
+      </div>
     </Fragment>
   );
 }
