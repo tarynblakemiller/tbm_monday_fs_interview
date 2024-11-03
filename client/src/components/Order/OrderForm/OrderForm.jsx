@@ -1,11 +1,13 @@
 import BaseInput from "../../Input/Input";
 import OrderButton from "../../Button/Button";
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import FragranceSelector from "../../Dropdown/Dropdown";
 import PropTypes from "prop-types";
-import { Icon } from "monday-ui-react-core";
+import { IconButton } from "monday-ui-react-core";
 import { Heading } from "monday-ui-react-core/next";
 import { Divider } from "monday-ui-react-core";
+import Filter from "monday-ui-react-core/dist/icons/Filter";
+
 import "./OrderForm.css";
 
 export const OrderForm = ({ onSubmit }) => {
@@ -16,17 +18,49 @@ export const OrderForm = ({ onSubmit }) => {
     scentProfiles: [],
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    try {
+      const orderBody = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        quantity: formData.quantity,
+        scentProfiles: formData.scentProfiles,
+      };
+
+      const orderResponse = await fetch("http://localhost:8080/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderBody),
+      });
+
+      if (!orderResponse.ok) {
+        throw new Error("Network orderResponse was not ok");
+      }
+
+      const orderData = await orderResponse.json();
+      console.log(orderData);
+
+      if (onSubmit) {
+        onSubmit(formData);
+      }
+    } catch (err) {
+      console.error(err.message);
+    }
   };
 
   return (
     <div className="order-wrapper">
       <div className="order-maker-header">
-        <Heading type="h2">Order Maker</Heading>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <Heading type="h2">Order Maker</Heading>
+          <IconButton
+            icon={Filter}
+            ariaLabel="Filter the widget by everything"
+            size={IconButton.sizes.SMALL}
+          />
+        </div>
         <button className="meatball-button">⋯</button>
-        <Icon clickable="true" icon={function noRefCheck() {}} />
       </div>
       <Divider direction="horizontal" />
       <div className="order-maker-container">

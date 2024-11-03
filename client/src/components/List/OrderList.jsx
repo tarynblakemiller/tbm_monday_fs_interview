@@ -1,3 +1,5 @@
+import BaseInput from "../Input/Input";
+
 const OrderList = ({ orders, onStatusChange }) => {
   return (
     <div>
@@ -5,7 +7,7 @@ const OrderList = ({ orders, onStatusChange }) => {
         <div key={order.id}>
           <span>{order.item}</span>
           <span>{order.salesAssociate}</span>
-          <BaseSelect
+          <BaseInput
             value={order.status}
             onChange={(value) => onStatusChange(order.id, value)}
             options={[
@@ -24,3 +26,5 @@ const OrderList = ({ orders, onStatusChange }) => {
     </div>
   );
 };
+
+export default OrderList;

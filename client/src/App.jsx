@@ -1,6 +1,3 @@
-// if (typeof global === "undefined") {
-//   window.global = window;
-// }
 import { Fragment } from "react";
 import "vibe-storybook-components/index.css";
 import mondaySdk from "monday-sdk-js";
