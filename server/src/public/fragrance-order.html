@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Fragrance Order Form</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      .form-container {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+      }
+      .tags {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .tag {
+        padding: 5px 10px;
+        background: #e3f2fd;
+        border-radius: 15px;
+        cursor: pointer;
+      }
+      .tag.selected {
+        background: #2196f3;
+        color: white;
+      }
+      button {
+        background: #0085ff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      #result {
+        margin-top: 20px;
+        padding: 10px;
+        border-radius: 4px;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="form-container">
+      <h1>Create Fragrance Order</h1>
+
+      <div class="form-group">
+        <label>First Name:</label>
+        <input type="text" id="firstName" required />
+      </div>
+
+      <div class="form-group">
+        <label>Last Name:</label>
+        <input type="text" id="lastName" required />
+      </div>
+
+      <div class="form-group">
+        <label>Quantity:</label>
+        <input type="number" id="quantity" required min="1" />
+      </div>
+
+      <div class="form-group">
+        <label>Fragrance Name:</label>
+        <input type="text" id="fragranceName" required />
+      </div>
+
+      <div class="form-group">
+        <label>Category:</label>
+        <select id="category">
+          <option value="Herbaceous">Herbaceous</option>
+          <option value="Fruity">Fruity</option>
+          <option value="Fresh">Fresh</option>
+          <option value="Smokey">Smokey</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Description:</label>
+        <input type="text" id="description" required />
+      </div>
+
+      <button onclick="createOrder()">Start Order</button>
+
+      <div id="result"></div>
+    </div>
+
+    <script>
+      async function createOrder() {
+        const result = document.getElementById("result");
+        result.textContent = "Creating order...";
+
+        const fragranceData = {
+          name: document.getElementById("fragranceName").value,
+          description: document.getElementById("description").value,
+          category: document.getElementById("category").value,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        const orderData = {
+          firstName: document.getElementById("firstName").value,
+          lastName: document.getElementById("lastName").value,
+          quantity: parseInt(document.getElementById("quantity").value),
+          fragranceData,
+        };
+
+        try {
+          const response = await fetch("/api/create-fragrance-order", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(orderData),
+          });
+
+          const data = await response.json();
+          result.style.backgroundColor = "#d4edda";
+          result.textContent =
+            "Order created successfully!\n\n" + JSON.stringify(data, null, 2);
+        } catch (error) {
+          result.style.backgroundColor = "#f8d7da";
+          result.textContent = "Error: " + error.message;
+        }
+      }
+    </script>
+  </body>
+</html>

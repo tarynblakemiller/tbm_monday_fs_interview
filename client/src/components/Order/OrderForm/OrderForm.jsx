@@ -1,126 +1,144 @@
-import BaseInput from "../../Input/Input";
-import OrderButton from "../../Button/Button";
-import { useState } from "react";
-import FragranceSelector from "../../Dropdown/Dropdown";
 import PropTypes from "prop-types";
-import { IconButton } from "monday-ui-react-core";
-import { Heading } from "monday-ui-react-core/next";
-import { Divider } from "monday-ui-react-core";
-import Filter from "monday-ui-react-core/dist/icons/Filter";
+import { useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { Divider, TextField } from "monday-ui-react-core";
+import OrderButton from "../Button/OrderButton";
+import { OrderHeader } from "../OrderHeader/OrderHeader";
+import ErrorMessage from "../../Error/Error";
+import { useOrderForm } from "../../../hooks/useOrderForm/useOrderForm.js";
+import useFragranceData from "../../../hooks/useOrderForm/useFragranceData.js";
+
+import FragranceSelector from "../../FragranceSelector/FragranceSelector.jsx";
 
 import "./OrderForm.css";
 
-export const OrderForm = ({ onSubmit }) => {
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    quantity: 0,
-    scentProfiles: [],
+const OrderForm = () => {
+  const { id } = useParams();
+  // Get fragrance data using the custom hook
+  const fragrances = useFragranceData();
+
+  const {
+    formData,
+    setFormData,
+    handleSubmit,
+    loadOrder,
+    deleteCurrentOrder,
+    error,
+    isLoading,
+  } = useOrderForm({
+    initialState: {
+      firstName: "",
+      lastName: "",
+      quantity: 1,
+      fragranceCategories: [],
+    },
+    validate: (data) => {
+      const errors = {};
+      if (!data.firstName) errors.firstName = "Required";
+      if (!data.lastName) errors.lastName = "Required";
+      if (!data.fragranceCategories?.length)
+        errors.fragranceCategories = "Select at least one fragrance";
+      return errors;
+    },
   });
 
-  const handleSubmit = async (e) => {
+  useEffect(() => {
+    if (id) {
+      loadOrder(id);
+    }
+  }, [id, loadOrder]);
+
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
-      const orderBody = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        quantity: formData.quantity,
-        scentProfiles: formData.scentProfiles,
-      };
-
-      const orderResponse = await fetch("http://localhost:8080/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderBody),
-      });
-
-      if (!orderResponse.ok) {
-        throw new Error("Network orderResponse was not ok");
-      }
-
-      const orderData = await orderResponse.json();
-      console.log(orderData);
-
-      if (onSubmit) {
-        onSubmit(formData);
-      }
+      await handleSubmit(!!formData.id);
     } catch (err) {
-      console.error(err.message);
+      console.error("Form submission error:", err);
     }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteCurrentOrder();
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
+  };
+
+  const handleFragranceSelect = (selectedOptions) => {
+    setFormData({ fragranceCategories: selectedOptions });
   };
 
   return (
     <div className="order-wrapper">
-      <div className="order-maker-header">
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <Heading type="h2">Order Maker</Heading>
-          <IconButton
-            icon={Filter}
-            ariaLabel="Filter the widget by everything"
-            size={IconButton.sizes.SMALL}
-          />
-        </div>
-        <button className="meatball-button">⋯</button>
-      </div>
+      <OrderHeader onFilterClick={() => console.log("Filter clicked")} />
       <Divider direction="horizontal" />
-      <div className="order-maker-container">
-        <div>
-          <form onSubmit={handleSubmit}>
-            <div className="input-field-container">
-              <div className="input-grid-container">
-                <div className="input-item">
-                  <BaseInput
-                    title="First Name"
-                    placeholder="Joseph"
-                    size="small"
-                    value={formData.firstName}
-                    onChange={(value) =>
-                      setFormData({ ...formData, firstName: value })
-                    }
-                  />
-                </div>
-                <div className="input-item">
-                  <BaseInput
-                    title="Last Name"
-                    placeholder="Smith"
-                    size="small"
-                    value={formData.lastName}
-                    onChange={(value) =>
-                      setFormData({ ...formData, lastName: value })
-                    }
-                  />
-                </div>
-                <div className="input-item">
-                  <BaseInput
-                    type="number"
-                    title="Quantity"
-                    placeholder="0"
-                    size="small"
-                    value={formData.quantity}
-                    onChange={(value) =>
-                      setFormData({ ...formData, quantity: value })
-                    }
-                  />
-                </div>
-              </div>
-              <div className="fragrance-selector-container">
-                <FragranceSelector
-                  onChange={(value) =>
-                    setFormData({ ...formData, scentProfiles: value })
-                  }
-                />
-              </div>
 
-              <div className="button-container">
-                <OrderButton
-                  className="order-button"
-                  type="submit"
-                  text="Start Order"
-                />
-              </div>
+      <div className="order-maker-container">
+        {error && <ErrorMessage message={error} />}
+
+        <form onSubmit={handleFormSubmit} className="input-field-container">
+          <div className="input-grid-container">
+            <div className="input-item">
+              <TextField
+                title="Client First Name"
+                placeholder="Taryn"
+                value={formData.firstName}
+                onChange={(value) => setFormData({ firstName: value })}
+                size={TextField.sizes.small}
+                required
+              />
             </div>
-          </form>
-        </div>
+            <TextField
+              title="Client Last Name"
+              placeholder="Miller"
+              value={formData.lastName}
+              onChange={(value) => setFormData({ lastName: value })}
+              size={TextField.sizes.small}
+              required
+            />
+            <TextField
+              title="Quantity"
+              placeholder="0"
+              value={formData.quantity}
+              onChange={(value) => setFormData({ quantity: value })}
+              type="number"
+              min="1"
+              max="3"
+              size={TextField.sizes.small}
+              required
+            />
+          </div>
+          <div className="fragrance-selector-container">
+            <FragranceSelector
+              onChange={handleFragranceSelect}
+              value={formData.fragranceCategories}
+              options={fragrances}
+            />
+          </div>
+          <div className="order-btn-container">
+            <OrderButton
+              onClick={handleFormSubmit}
+              text={
+                isLoading
+                  ? "Submitting..."
+                  : formData.id
+                  ? "Update Order"
+                  : "Start Order"
+              }
+              disabled={isLoading}
+            />
+            {formData.id && (
+              <OrderButton
+                type="button"
+                onClick={handleDelete}
+                text="Delete Order"
+                variant="destructive"
+                className="ml-4"
+              />
+            )}
+          </div>
+        </form>
       </div>
     </div>
   );
@@ -128,4 +146,7 @@ export const OrderForm = ({ onSubmit }) => {
 
 OrderForm.propTypes = {
   onSubmit: PropTypes.func,
+  onError: PropTypes.func,
 };
+
+export default OrderForm;
