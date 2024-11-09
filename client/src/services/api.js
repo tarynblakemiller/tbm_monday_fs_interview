@@ -1,124 +1,77 @@
+// frontend/src/services/api.js
 import axios from "axios";
 
+const API_BASE_URL = "http://localhost:8080";
+
+// Create single axios instance
 export const apiClient = axios.create({
-  baseURL: "/monday/api",
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-apiClient.interceptors.request.use((request) => {
-  console.log("Request Details:", {
-    method: request.method?.toUpperCase(),
-    url: request.url,
-    data: request.data,
-    headers: request.headers,
-    baseURL: request.baseURL,
-  });
-  return request;
-});
-
-apiClient.interceptors.response.use(
-  (response) => {
-    console.log("Response Details:", {
-      status: response.status,
-      url: response.config.url,
-      data: response.data,
-    });
-    return response;
-  },
-  (error) => {
-    console.error("API Error Details:", {
-      url: error.config?.url,
-      method: error.config?.method,
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message,
-      stack: error.stack,
-    });
-    return Promise.reject(error);
-  }
-);
-
-// export const orderService = {
-//   create: async (orderData) => {
-//     try {
-//       const response = await apiClient.post("/orders", {
-//         ...orderData,
-//         boardId: parseInt(import.meta.env.VITE_MONDAY_BOARD_ID),
-//         groupId: "topics",
-//         itemName: `${orderData.firstName} ${orderData.lastName}`,
-//       });
-//       return response.data;
-//     } catch (error) {
-//       console.error("Order creation error:", error);
-//       throw new Error(error.response?.data?.error || "Failed to create order");
-//     }
-//   },
-
-//   getAll: async () => {
-//     try {
-//       const response = await apiClient.get("/orders");
-//       return response.data;
-//     } catch (error) {
-//       console.error("Get all orders error:", error);
-//       throw error;
-//     }
-//   },
-
-//   getById: async (id) => {
-//     try {
-//       const response = await apiClient.get(`/orders/${id}`);
-//       return response.data;
-//     } catch (error) {
-//       console.error("Get order by ID error:", error);
-//       throw error;
-//     }
-//   },
-
-//   update: async (id, columnValues) => {
-//     try {
-//       const response = await apiClient.put(`/orders/${id}`, {
-//         columnValues:
-//           typeof columnValues === "string"
-//             ? columnValues
-//             : JSON.stringify(columnValues),
-//       });
-//       return response.data;
-//     } catch (error) {
-//       console.error("Update order error:", error);
-//       throw error;
-//     }
-//   },
-
-//   delete: async (id) => {
-//     try {
-//       const response = await apiClient.delete(`/orders/${id}`);
-//       return response.data;
-//     } catch (error) {
-//       console.error("Delete order error:", error);
-//       throw error;
-//     }
-//   },
-// };
-
+// Single order service
 export const orderService = {
-  create: (payload) => axios.post("/api/orders/create", payload),
-  update: (id, payload) => axios.put(`/api/orders/${id}`, payload),
-  delete: (id) => axios.delete(`/api/orders/${id}`),
-  getFragrances: () => axios.get("/api/fragrances"),
+  async create(orderData) {
+    try {
+      console.log("Sending create request with data:", orderData);
+      const response = await apiClient.post("/api/orders", orderData); // Add /api prefix
+      console.log("API Response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Order creation failed:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        url: error.config?.url,
+      });
+      throw error;
+    }
+  },
+
+  async update(itemId, orderData) {
+    try {
+      const response = await apiClient.put(`/api/orders/${itemId}`, orderData); // Add /api prefix
+      return response.data;
+    } catch (error) {
+      console.error("Order update failed:", error);
+      throw error;
+    }
+  },
+
+  async delete(itemId) {
+    try {
+      const response = await apiClient.delete(`/api/orders/${itemId}`); // Add /api prefix
+      return response.data;
+    } catch (error) {
+      console.error("Order deletion failed:", error);
+      throw error;
+    }
+  },
 };
 
 export const fragranceApi = {
-  getAll: () => apiClient.get("/fragrances"),
-  getById: (id) => apiClient.get(`/fragrances/${id}`),
-  create: (data) => apiClient.post("/fragrances", data),
-  update: (id, data) => apiClient.put(`/fragrances/${id}`, data),
-  delete: (id) => apiClient.delete(`/fragrances/${id}`),
+  getAll: () => apiClient.get("/api/fragrances"),
+  getById: (id) => apiClient.get(`/api/fragrances/${id}`),
+  create: (data) => apiClient.post("/api/fragrances", data),
+  update: (id, data) => apiClient.put(`/api/fragrances/${id}`, data),
+  delete: (id) => apiClient.delete(`/api/fragrances/${id}`),
 };
+// // Fragrance service
+// export const fragranceService = {
+//   async getAll() {
+//     const response = await apiClient.get("/fragrances");
+//     return response.data;
+//   },
+
+//   async getById(id) {
+//     const response = await apiClient.get(`/fragrances/${id}`);
+//     return response.data;
+//   },
+//   // ... other fragrance methods
+// };
 
 export default {
-  api: apiClient,
   orders: orderService,
   fragrances: fragranceApi,
 };

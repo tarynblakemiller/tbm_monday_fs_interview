@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import Dropdown from "monday-ui-react-core/dist/Dropdown";
 import TextWithHighlight from "monday-ui-react-core/dist/TextWithHighlight";
 import { useState, useMemo, useCallback } from "react";
-import useFragranceData from "../../hooks/useOrderForm/useFragranceData";
+import { useFragrances } from "../../hooks/useOrderForm/useFragrances";
 import "./FragranceSelector.css";
 
 export const FragranceSelector = ({
@@ -12,44 +12,58 @@ export const FragranceSelector = ({
   value = [],
 }) => {
   const [error, setInternalError] = useState(false);
+  const { fragrances, loading } = useFragrances();
 
-  // Get fragrances directly from your hook
-  const fragrances = useFragranceData();
-
-  // Transform the fragrance data into the format expected by Monday UI Dropdown
   const FRAGRANCE_OPTIONS = useMemo(() => {
     if (!fragrances.length) return [];
 
     return fragrances.map((fragrance) => ({
       id: fragrance.id.toString(),
-      value: fragrance.id.toString(), // Using id as value
-      label: fragrance.name, // Assuming there's a name field
+      value: fragrance.category,
+      label: `${fragrance.name} - ${fragrance.category}`,
       chipColor: Dropdown.chipColors.PRIMARY,
+      fragranceData: fragrance,
+      category: fragrance.category,
     }));
   }, [fragrances]);
 
   const selectedOptions = useMemo(() => {
+    if (!value?.length) return [];
     return value
-      .map((val) => FRAGRANCE_OPTIONS.find((opt) => opt.id === String(val)))
+      .map((val) => FRAGRANCE_OPTIONS.find((opt) => opt.id === val.toString()))
       .filter(Boolean);
   }, [value, FRAGRANCE_OPTIONS]);
 
+  // In FragranceSelector.jsx
   const handleSelection = useCallback(
     (selected) => {
       if (!selected) {
         setInternalError(true);
-        onChange([]);
+        onChange({
+          ids: [],
+          labels: [], // Simplify this
+        });
         return;
       }
 
       const validSelection = selected.slice(0, maxSelections);
       setInternalError(validSelection.length !== maxSelections);
 
-      const selectedIds = validSelection.map((option) => option.id);
-      onChange(selectedIds);
+      // Just send what we need
+      const selectedData = {
+        ids: validSelection.map((option) => option.id),
+        labels: validSelection.map((option) => option.category), // Just get the categories
+      };
+
+      console.log("Selected in FragranceSelector:", selectedData);
+      onChange(selectedData);
     },
     [maxSelections, onChange]
   );
+
+  if (loading) {
+    return <div>Loading fragrances...</div>;
+  }
 
   const showError = customError || error;
 
@@ -63,6 +77,7 @@ export const FragranceSelector = ({
         multiline
         className="dropdown-stories-styles_with-chips"
         placeholder="Select up to 3 scents"
+        loading={loading}
       />
       {showError && (
         <TextWithHighlight
@@ -75,10 +90,26 @@ export const FragranceSelector = ({
 };
 
 FragranceSelector.propTypes = {
-  value: PropTypes.arrayOf(PropTypes.string),
+  value: PropTypes.arrayOf(
+    PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.number,
+      PropTypes.shape({
+        id: PropTypes.string,
+        label: PropTypes.string,
+      }),
+    ])
+  ),
   onChange: PropTypes.func.isRequired,
   error: PropTypes.bool,
   maxSelections: PropTypes.number,
 };
+
+// FragranceSelector.propTypes = {
+//   value: PropTypes.arrayOf(PropTypes.string),
+//   onChange: PropTypes.func.isRequired,
+//   error: PropTypes.bool,
+//   maxSelections: PropTypes.number,
+// };
 
 export default FragranceSelector;

@@ -6,7 +6,7 @@ import OrderButton from "../Button/OrderButton";
 import { OrderHeader } from "../OrderHeader/OrderHeader";
 import ErrorMessage from "../../Error/Error";
 import { useOrderForm } from "../../../hooks/useOrderForm/useOrderForm.js";
-import useFragranceData from "../../../hooks/useOrderForm/useFragranceData.js";
+import { useFragrances } from "../../../hooks/useOrderForm/useFragrances.js";
 
 import FragranceSelector from "../../FragranceSelector/FragranceSelector.jsx";
 
@@ -15,7 +15,7 @@ import "./OrderForm.css";
 const OrderForm = () => {
   const { id } = useParams();
   // Get fragrance data using the custom hook
-  const fragrances = useFragranceData();
+  const fragrances = useFragrances();
 
   const {
     formData,
@@ -29,8 +29,11 @@ const OrderForm = () => {
     initialState: {
       firstName: "",
       lastName: "",
-      quantity: 1,
-      fragranceCategories: [],
+      quantity: 0,
+      dropdown: {
+        // Add this to initialState
+        labels: [],
+      },
     },
     validate: (data) => {
       const errors = {};
@@ -65,10 +68,16 @@ const OrderForm = () => {
     }
   };
 
-  const handleFragranceSelect = (selectedOptions) => {
-    setFormData({ fragranceCategories: selectedOptions });
+  const handleFragranceSelect = (selection) => {
+    console.log("Selection received:", selection);
+    setFormData({
+      ...formData, // Spread existing form data
+      fragranceCategories: selection.map((s) => s.id),
+      dropdown: {
+        labels: selection.map((s) => s.category),
+      },
+    });
   };
-
   return (
     <div className="order-wrapper">
       <OrderHeader onFilterClick={() => console.log("Filter clicked")} />

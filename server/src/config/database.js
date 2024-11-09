@@ -93,6 +93,9 @@ export const initializeDatabase = async () => {
 
     await sequelize.authenticate();
     console.log("Database connected successfully");
+    // Sync all models
+    // In production, you might want to remove force: true
+    // await sequelize.sync({ alter: true });
 
     console.log("Running migrations and seeds...");
     await runMigrations(sequelize, true);

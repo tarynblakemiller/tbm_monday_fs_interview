@@ -1,38 +1,27 @@
-import mondayApiClient from "../config/mondayApi.js";
+import { mondayService } from "./mondayService.js";
 
-export const createOrderInBoard = async (orderData) => {
-  const mutation = `
-  mutation {
-    create_item(board_id: 7730832838, item_name: "${
-      orderData.orderName
-    }", column_values: "${JSON.stringify({
-    fragrance: orderData.fragrance,
-    quantity: orderData.quantity,
-  })}") {
-      id
+export const orderService = {
+  async create(orderData) {
+    try {
+      console.log("Creating order with data:", orderData);
+      const result = await mondayService.createItem(orderData);
+      console.log("Order created on Monday:", result);
+      return result;
+    } catch (error) {
+      console.error("Order creation failed:", error);
+      throw error;
     }
-  }
-`;
-  const response = await mondayApiClient.post("", { query: mutation });
-  return response.data;
-};
+  },
 
-export const getOrdersFromBoard = async () => {
-  const query = `
-    query {
-      boards(ids: 7730832838) {
-        items {
-          id
-          name
-          column_values {
-            id
-            text
-          }
-        }
-      }
-    }
-  `;
+  async update(itemId, orderData) {
+    return mondayService.updateItem(itemId, orderData);
+  },
 
-  const response = await mondayApiClient.post("", { query });
-  return response.data;
+  async delete(itemId) {
+    return mondayService.deleteItem(itemId);
+  },
+
+  async getAll() {
+    return mondayService.getOrders();
+  },
 };

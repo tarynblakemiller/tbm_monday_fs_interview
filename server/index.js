@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import { initializeDatabase } from "./src/config/database.js";
 import db from "./src/config/database.js";
 import mondaySdk from "monday-sdk-js";
-import { validateConnection } from "./src/middleware/monday.middleware.js";
 
 dotenv.config();
 const PORT = process.env.PORT || 8080;
@@ -15,9 +14,6 @@ mondayClient.setApiVersion("2024-10");
 const startServer = async () => {
   try {
     await initializeDatabase();
-
-    await db.sequelize.authenticate();
-    console.log("Database connection has been established successfully.");
 
     app.listen(PORT, () => {
       console.log("\n🚀 Server is ready!");

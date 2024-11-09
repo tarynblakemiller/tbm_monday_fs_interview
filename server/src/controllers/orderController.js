@@ -1,17 +1,34 @@
-import { createItemInBoard } from "../services/orderService";
+// controllers/orderController.js
+import { orderService } from "../services/orderService.js";
 
-createOrder = async (req, res) => {
+export const createOrder = async (req, res) => {
   try {
-    const orderData = req.body;
-    const response = await createItemInBoard(orderData);
-    res.status(201).json(response);
+    console.log("Received order data:", req.body);
+    const result = await orderService.create(req.body);
+    console.log("Created order:", result);
+    res.json(result);
   } catch (error) {
-    res.status(500).json({ error: "Failed to create order" });
+    console.error("Order creation error:", error);
+    res.status(500).json({ error: error.message });
   }
 };
 
-// export const getOrders = async (req, res) => {
-//   try {
-//     const boardId = process.env.MONDAY_BOARD_ID;
-//   }
-// }
+export const updateOrder = async (req, res) => {
+  try {
+    const result = await orderService.update(req.params.id, req.body);
+    res.json(result);
+  } catch (error) {
+    console.error("Order update error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const deleteOrder = async (req, res) => {
+  try {
+    await orderService.delete(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Order deletion error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};

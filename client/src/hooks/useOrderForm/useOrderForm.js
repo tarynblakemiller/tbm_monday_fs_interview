@@ -17,21 +17,12 @@ export const useOrderForm = ({ initialState = {}, validate }) => {
     return true;
   }, [formData, validate]);
 
+  // Remove the dropdown processing since we're getting it in the correct format
   const updateFormData = (updates) => {
-    const processedUpdates = { ...updates };
-    if ("dropdown" in updates) {
-      processedUpdates.dropdown = Array.isArray(updates.dropdown)
-        ? updates.dropdown.map(String)
-        : updates.dropdown
-        ? [String(updates.dropdown)]
-        : [];
-    }
-
-    setFormData((prev) => ({ ...prev, ...processedUpdates }));
-    setFieldErrors((prev) => {
-      const newErrors = { ...prev };
-      Object.keys(updates).forEach((key) => delete newErrors[key]);
-      return newErrors;
+    setFormData((prev) => {
+      const newData = { ...prev, ...updates };
+      console.log("Updated form data:", newData); // Debug log
+      return newData;
     });
   };
 
@@ -40,12 +31,16 @@ export const useOrderForm = ({ initialState = {}, validate }) => {
 
     setIsLoading(true);
     try {
+      console.log("Form data before payload:", formData);
       const payload = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        quantity: parseInt(formData.quantity),
-        labels: formData.dropdown,
+        quantity: Number(formData.quantity),
+        dropdown: {
+          labels: formData.dropdown, // Already in correct format from OrderForm
+        },
       };
+      console.log("Submitting payload:", payload);
 
       if (formData.id) {
         await orderService.update(formData.id, payload);
@@ -55,6 +50,9 @@ export const useOrderForm = ({ initialState = {}, validate }) => {
       }
     } catch (error) {
       console.error("Submit error:", error);
+      if (error.response) {
+        console.error("Error details:", error.response.data);
+      }
       setFieldErrors((prev) => ({
         ...prev,
         submit: error.message || "Failed to submit order",
