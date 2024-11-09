@@ -2,26 +2,8 @@ import PropTypes from "prop-types";
 import Dropdown from "monday-ui-react-core/dist/Dropdown";
 import TextWithHighlight from "monday-ui-react-core/dist/TextWithHighlight";
 import { useState, useMemo, useCallback } from "react";
-import { MONDAY_SETTINGS } from "./constants";
+import useFragranceData from "../../hooks/useOrderForm/useFragranceData";
 import "./FragranceSelector.css";
-
-let FRAGRANCE_OPTIONS = [
-  { value: "smokey", label: "Smokey" },
-  { value: "fruity", label: "Fruity" },
-  { value: "fresh", label: "Fresh" },
-  { value: "floral", label: "Floral" },
-  { value: "herbaceous", label: "Herbaceous" },
-  { value: "citrus", label: "Citrus" },
-];
-
-FRAGRANCE_OPTIONS = MONDAY_SETTINGS.labels.map((option) => ({
-  ...option,
-  id: option.id.toString(),
-  value: option.id.toString(),
-  label: option.name,
-  chipColor: Dropdown.chipColors.PRIMARY,
-  position: `(${option.name})`,
-}));
 
 export const FragranceSelector = ({
   onChange,
@@ -29,27 +11,28 @@ export const FragranceSelector = ({
   maxSelections = 3,
   value = [],
 }) => {
-  // const [fragrances, setFragrances] = useState([]);
   const [error, setInternalError] = useState(false);
+
+  // Get fragrances directly from your hook
+  const fragrances = useFragranceData();
+
+  // Transform the fragrance data into the format expected by Monday UI Dropdown
+  const FRAGRANCE_OPTIONS = useMemo(() => {
+    if (!fragrances.length) return [];
+
+    return fragrances.map((fragrance) => ({
+      id: fragrance.id.toString(),
+      value: fragrance.id.toString(), // Using id as value
+      label: fragrance.name, // Assuming there's a name field
+      chipColor: Dropdown.chipColors.PRIMARY,
+    }));
+  }, [fragrances]);
 
   const selectedOptions = useMemo(() => {
     return value
       .map((val) => FRAGRANCE_OPTIONS.find((opt) => opt.id === String(val)))
       .filter(Boolean);
-  }, [value]);
-
-  // useEffect(() => {
-  //   const fetchFragrances = async () => {
-  //     try {
-  //       const response = await fetch("/fragrances-endpoint"); // Adjust this URL
-  //       const options = await response.json();
-  //       setFragrances(options);
-  //     } catch (err) {
-  //       console.error("Error fetching fragrances:", err);
-  //     }
-  //   };
-  //   fetchFragrances();
-  // }, []);
+  }, [value, FRAGRANCE_OPTIONS]);
 
   const handleSelection = useCallback(
     (selected) => {
