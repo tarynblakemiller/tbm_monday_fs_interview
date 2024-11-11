@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Divider, TextField } from "monday-ui-react-core";
 import OrderButton from "../Button/OrderButton";
 import { OrderHeader } from "../OrderHeader/OrderHeader";
+import MultiSelect from "../../MultiSelect/MultiSelect";
 
 import "./OrderForm.css";
 
@@ -17,17 +18,29 @@ const apiClient = axios.create({
 const OrderForm = () => {
   const [formData, setFormData] = useState({
     boardId: "7730832838",
-    itemName: "",
+    item_name: "New Order",
     columnValues: {
       text: "",
       text6: "",
       numbers: 0,
+      dropdown: {
+        labels: [],
+      },
       status: {
         label: "New Order",
       },
       date_1: {
         date: new Date().toISOString().split("T")[0],
       },
+
+      // orderData: {
+      //   firstName: "",
+      //   lastName: "",
+      //   quantity: 0,
+      //   fragrances: [],
+      //   status: "NEW",
+      //   orderDate: new Date().toISOString().split("T")[0],
+      // },
     },
   });
 
@@ -36,22 +49,35 @@ const OrderForm = () => {
 
     setFormData((prev) => {
       let updatedValues = { ...prev.columnValues };
-
+      // const updatedOrderData = { ...prev.orderData };
+      console.log("UPDATED VALUES", updatedValues);
       switch (fieldName) {
         case "firstName":
           updatedValues.text = value;
+          // updatedOrderData.firstName = value;
           break;
         case "lastName":
           updatedValues.text6 = value;
+          // updatedOrderData.lastName = value;
           break;
         case "quantity":
           updatedValues.numbers = parseInt(value) || 0;
+          // updatedOrderData.quantity = parseInt(value) || 0;
           break;
+        case "fragrances": {
+          updatedValues.dropdown = {
+            labels: value.map((label) => ({
+              id: label.id || label,
+            })),
+          };
+          break;
+        }
       }
 
       return {
         ...prev,
         columnValues: updatedValues,
+        // orderData: updatedOrderData,
       };
     });
   };
@@ -63,28 +89,45 @@ const OrderForm = () => {
         text: formData.columnValues.text,
         text6: formData.columnValues.text6,
         numbers: formData.columnValues.numbers,
+        dropdown: {
+          labels: formData.columnValues.dropdown.labels.map(
+            (label) => label.id
+          ),
+        },
         status: { label: "New Order" },
         date_1: { date: new Date().toISOString().split("T")[0] },
       };
 
-      const response = await apiClient.post("/orders/create", {
+      console.log(columnValues);
+      // 2. Save to database first
+      // const dbResponse = await apiClient.post("/orders", {
+      //   ...formData.orderData,
+      // });
+
+      // 3. Create Monday.com item with formatted column values
+      const mondayResponse = await apiClient.post("/orders", {
         boardId: formData.boardId,
         itemName: "New Order",
-        columnValues: JSON.stringify(columnValues),
+        columnValues: JSON.stringify(columnValues), // Use formatted columnValues here
         groupId: "topics",
       });
 
-      const itemId = response.data.data.create_item.id;
+      console.log("Monday Response:", mondayResponse);
 
-      const updateResponse = await apiClient.post("/orders/update", {
-        itemId: itemId,
-        boardId: formData.boardId,
-        itemName: `Order#${itemId}`,
-      });
+      const mondayItemId = mondayResponse.data.id;
 
-      console.log("Item created and updated:", updateResponse.data);
+      // await apiClient.put(`/orders/${dbResponse.data.id}`, {
+      //   mondayItemId: mondayItemId,
+      // });
+
+      // console.log("Order created successfully:", dbResponse.data);
+      console.log(
+        "Order created successfully:",
+        mondayResponse.data,
+        mondayItemId
+      );
     } catch (error) {
-      console.error("Error creating item:", error);
+      console.error("Error creating order:", error);
     }
   };
 
@@ -130,13 +173,15 @@ const OrderForm = () => {
               required
             />
           </div>
-          {/* <div className="fragrance-selector-container">
-            <FragranceSelector
-              onChange={handleFragranceSelect}
-              value={formData.dropdown.labels}
+          <div>
+            <MultiSelect
+              value={formData.columnValues.dropdown.labels}
+              onChange={(selected) => handleChange("fragrances", selected)}
               maxSelections={3}
+              label="Select Scents"
+              optionsEndpoint="/fragrances"
             />
-          </div> */}
+          </div>
           <div className="order-btn-container">
             <OrderButton
               onClick={handleSubmit}

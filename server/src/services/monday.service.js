@@ -1,5 +1,4 @@
 import { gql } from "graphql-tag";
-import { format } from "sequelize/lib/utils";
 import { createClient, fetchExchange } from "urql";
 
 const client = createClient({
@@ -84,4 +83,37 @@ async function updateItemName(data) {
   return result;
 }
 
-export { createItem, updateItemName };
+const GET_BOARD_ITEMS = gql`
+  query GetBoardItems($boardId: ID!) {
+    boards(ids: [$boardId]) {
+      items {
+        id
+        name
+        column_values {
+          id
+          text
+          value
+        }
+      }
+    }
+  }
+`;
+
+const DELETE_ITEM = gql`
+  mutation DeleteItem($itemId: ID!) {
+    delete_item(item_id: $itemId) {
+      id
+    }
+  }
+`;
+
+export const mondayService = {
+  createItem,
+  updateItemName,
+  getItems: async (boardId) => {
+    return await client.query(GET_BOARD_ITEMS, { boardId }).toPromise();
+  },
+  deleteItem: async (itemId) => {
+    return await client.mutation(DELETE_ITEM, { itemId }).toPromise();
+  },
+};

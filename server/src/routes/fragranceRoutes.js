@@ -4,6 +4,7 @@ import {
   getFragrance,
   createFragrance,
   updateFragrance,
+  // syncCategoriesToMonday,
   deleteFragrance,
 } from "../controllers/fragrance.controller.js";
 
@@ -13,6 +14,7 @@ router.get("/", getFragrances);
 router.get("/:id", getFragrance);
 router.post("/", createFragrance);
 router.put("/:id", updateFragrance);
+// router.post("/sync-categories", syncCategoriesToMonday);
 router.delete("/:id", deleteFragrance);
 
 export default router;

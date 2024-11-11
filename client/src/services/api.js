@@ -40,68 +40,6 @@ apiClient.interceptors.response.use(
   }
 );
 
-// export const orderService = {
-//   create: async (orderData) => {
-//     try {
-//       const response = await apiClient.post("/orders", {
-//         ...orderData,
-//         boardId: parseInt(import.meta.env.VITE_MONDAY_BOARD_ID),
-//         groupId: "topics",
-//         itemName: `${orderData.firstName} ${orderData.lastName}`,
-//       });
-//       return response.data;
-//     } catch (error) {
-//       console.error("Order creation error:", error);
-//       throw new Error(error.response?.data?.error || "Failed to create order");
-//     }
-//   },
-
-//   getAll: async () => {
-//     try {
-//       const response = await apiClient.get("/orders");
-//       return response.data;
-//     } catch (error) {
-//       console.error("Get all orders error:", error);
-//       throw error;
-//     }
-//   },
-
-//   getById: async (id) => {
-//     try {
-//       const response = await apiClient.get(`/orders/${id}`);
-//       return response.data;
-//     } catch (error) {
-//       console.error("Get order by ID error:", error);
-//       throw error;
-//     }
-//   },
-
-//   update: async (id, columnValues) => {
-//     try {
-//       const response = await apiClient.put(`/orders/${id}`, {
-//         columnValues:
-//           typeof columnValues === "string"
-//             ? columnValues
-//             : JSON.stringify(columnValues),
-//       });
-//       return response.data;
-//     } catch (error) {
-//       console.error("Update order error:", error);
-//       throw error;
-//     }
-//   },
-
-//   delete: async (id) => {
-//     try {
-//       const response = await apiClient.delete(`/orders/${id}`);
-//       return response.data;
-//     } catch (error) {
-//       console.error("Delete order error:", error);
-//       throw error;
-//     }
-//   },
-// };
-
 export const orderService = {
   create: (payload) => axios.post("/api/orders", payload),
   update: (id, payload) => axios.put(`/api/orders/${id}`, payload),
@@ -110,11 +48,11 @@ export const orderService = {
 };
 
 export const fragranceApi = {
-  getAll: () => apiClient.get("/fragrances"),
-  getById: (id) => apiClient.get(`/fragrances/${id}`),
-  create: (data) => apiClient.post("/fragrances", data),
-  update: (id, data) => apiClient.put(`/fragrances/${id}`, data),
-  delete: (id) => apiClient.delete(`/fragrances/${id}`),
+  getAll: () => apiClient.get("api/fragrances"),
+  getById: (id) => apiClient.get(`api/fragrances/${id}`),
+  create: (data) => apiClient.post("api/fragrances", data),
+  update: (id, data) => apiClient.put(`api/fragrances/${id}`, data),
+  delete: (id) => apiClient.delete(`api/fragrances/${id}`),
 };
 
 export default {

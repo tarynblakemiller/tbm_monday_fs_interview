@@ -1,5 +1,6 @@
 import db from "../config/database.js";
 const { Fragrance } = db;
+// import { mondayService } from "../services/monday.service.js";
 
 export const getFragrances = async (req, res) => {
   try {
@@ -59,3 +60,43 @@ export const deleteFragrance = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// export const syncCategoriesToMonday = async (req, res) => {
+//   try {
+//     const fragrances = await Fragrance.findAll();
+
+//     // Check if fragrances exist
+//     if (!fragrances || !Array.isArray(fragrances)) {
+//       throw new Error("No fragrances found or invalid data");
+//     }
+
+//     // Check if each fragrance has a category before mapping
+//     const categories = [
+//       ...new Set(
+//         fragrances
+//           .filter((f) => f && f.category) // Only process fragrances with categories
+//           .map((f) => f.category)
+//       ),
+//     ];
+
+//     // Verify we have categories before calling the service
+//     if (!categories.length) {
+//       throw new Error("No valid categories found");
+//     }
+
+//     const result = await mondayService.updateDropdownOptions(
+//       process.env.MONDAY_BOARD_ID,
+//       "dropdown",
+//       categories
+//     );
+
+//     res.json({
+//       success: true,
+//       categories,
+//       mondayResult: result,
+//     });
+//   } catch (error) {
+//     console.error("Error syncing categories:", error);
+//     res.status(500).json({ error: error.message });
+//   }
+// };

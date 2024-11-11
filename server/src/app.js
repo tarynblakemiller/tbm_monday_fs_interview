@@ -5,7 +5,6 @@ import {
   errorHandler,
   notFoundHandler,
 } from "./middleware/index.js";
-import mondayRouter from "./routes/mondayRoutes.js";
 import orderRouter from "./routes/orderRoutes.js";
 import fragranceRouter from "./routes/fragranceRoutes.js";
 import { validateConnection } from "./middleware/monday.middleware.js";
@@ -13,7 +12,6 @@ import { validateConnection } from "./middleware/monday.middleware.js";
 configureMiddleware(app);
 app.use(validateConnection);
 
-app.use("/api", mondayRouter);
 app.use("/api/orders", orderRouter);
 app.use("/api/fragrances", fragranceRouter);
 
