@@ -74,7 +74,15 @@ const OrderForm = () => {
         groupId: "topics",
       });
 
-      console.log("Initial item created:", response.data);
+      const itemId = response.data.data.create_item.id;
+
+      const updateResponse = await apiClient.post("/orders/update", {
+        itemId: itemId,
+        boardId: formData.boardId,
+        itemName: `Order#${itemId}`,
+      });
+
+      console.log("Item created and updated:", updateResponse.data);
     } catch (error) {
       console.error("Error creating item:", error);
     }

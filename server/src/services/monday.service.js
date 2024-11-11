@@ -51,7 +51,7 @@ async function createItem(data) {
 }
 
 const UPDATE_ITEM_NAME = gql`
-  mutation ChangeColumnValue(
+  mutation ChangeItemName(
     $boardId: ID!
     $itemId: ID!
     $columnId: String!
@@ -64,22 +64,24 @@ const UPDATE_ITEM_NAME = gql`
       value: $value
     ) {
       id
-      name
     }
   }
 `;
 
-async function updateColumnValue(data) {
-  const { boardId, itemId, columnId, value } = data;
+async function updateItemName(data) {
+  const { boardId, itemId } = data;
+  const value = JSON.stringify(`Order ${itemId}`);
+  const columnId = data.columnId || "name";
+
   const result = await client
     .mutation(UPDATE_ITEM_NAME, {
       boardId,
       itemId,
       columnId,
-      value: JSON.stringify(value),
+      value,
     })
     .toPromise();
   return result;
 }
 
-export { createItem, updateColumnValue };
+export { createItem, updateItemName };

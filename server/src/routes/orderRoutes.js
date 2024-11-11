@@ -1,17 +1,30 @@
 import express from "express";
-import { createItem } from "../services/monday.service.js";
+import { createItem, updateItemName } from "../services/monday.service.js";
 const router = express.Router();
-// import {
-//   createOrderInBoard,
-//   getOrdersFromBoard,
-// } from "../services/orderService.js";
-// import createItemOnBoard from "../services/monday.service.js";
 
 router.post("/create", async (req, res) => {
   try {
     const result = await createItem(req.body);
     res.status(200).json(result);
   } catch {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post("/update", async (req, res) => {
+  try {
+    const result = await updateItemName(req.body);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.delete("/:itemId", async (req, res) => {
+  try {
+    const result = await deleteItem(req.params.itemId);
+    res.status(200).json(result);
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
