@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import "vibe-storybook-components/index.css";
 import mondaySdk from "monday-sdk-js";
 import "monday-ui-react-core/dist/main.css";
-import { OrderForm } from "./components/Order/OrderForm/OrderForm";
+import OrderForm from "../src/components/Order/OrderForm/OrderForm";
 import { useEffect, useState } from "react";
 import "./App.css";
 
@@ -18,13 +18,9 @@ function App() {
 
     // TODO: set up event listeners, Here`s an example, read more here: https://developer.monday.com/apps/docs/mondaylisten/
     monday.listen("context", (res) => {
-      setContext(res.data);
+      setContext(res.data, context);
     });
   }, []);
-
-  // const attentionBoxText = `Hello, your user_id is: ${
-  //   context ? context.user.id : "still loading"
-  // }.`;
 
   return (
     <Fragment>
@@ -36,8 +32,3 @@ function App() {
 }
 
 export default App;
-
-// placeholder={placeholder}
-// title={title}
-// size={TextField.sizes.MEDIUM}
-// requiredAsterisk={true}
