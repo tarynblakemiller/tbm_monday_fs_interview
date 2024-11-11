@@ -12,7 +12,7 @@ export const seedFragrances = async (client) => {
         'FRAG-001',
         'Vanilla Dreams',
         'A warm and sweet vanilla fragrance with hints of amber and musk',
-        'Oriental',
+        'Sweet',
         'https://example.com/images/vanilla-dreams.jpg'
       ),
       (

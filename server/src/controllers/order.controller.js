@@ -4,8 +4,7 @@ import {
   getBoardItems,
   getItemById,
   deleteItemById,
-} from "../services/monday.service.js";
-import { env } from "../config/environment.js";
+} from "../services/mondayService.js";
 
 const formatOrderData = (data) => {
   const labelMapping = {

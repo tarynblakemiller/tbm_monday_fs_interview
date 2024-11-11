@@ -1,183 +1,85 @@
-import { mondayClient } from "../../index.js";
-import { env } from "../config/environment.js";
+import { gql } from "graphql-tag";
+import { format } from "sequelize/lib/utils";
+import { createClient, fetchExchange } from "urql";
 
-export const formatColumnValues = (data) => {
-  const { firstName, lastName, quantity, labels } = data;
-
-  return {
-    status: { label: "New Order" },
-    text: { text: firstName || "" },
-    text6: { text: lastName || "" },
-    numbers: { number: parseInt(quantity) || 0 },
-    dropdown: {
-      settings_str: JSON.stringify({
-        limit_select: false,
-        hide_footers: false,
-        labels: Array.isArray(labels)
-          ? labels.map((id) => ({ id: id.toString() }))
-          : [],
-      }),
+const client = createClient({
+  url: "https://api.monday.com/v2",
+  exchanges: [fetchExchange],
+  fetchOptions: {
+    headers: {
+      Authorization: `Bearer ${process.env.MONDAY_API_TOKEN}`,
     },
-    date_1: { date: new Date().toISOString().split("T")[0] },
-  };
-};
+  },
+});
 
-export const createItem = async ({
-  boardId,
-  groupId,
-  itemName,
-  columnValues,
-}) => {
-  try {
-    const query = `
-      mutation createItem($boardId: ID!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
-        create_item(
-          board_id: $boardId,
-          group_id: $groupId,
-          item_name: $itemName,
-          column_values: $columnValues
-        ) {
-          id
-        }
-      }
-    `;
+const CREATE_ITEM = gql`
+  mutation CreateItem(
+    $boardId: ID!
+    $itemName: String!
+    $columnValues: JSON!
+    $groupId: String!
+  ) {
+    create_item(
+      board_id: $boardId
+      group_id: $groupId
+      item_name: $itemName
+      column_values: $columnValues
+    ) {
+      id
+    }
+  }
+`;
 
-    const formattedColumnValues = formatColumnValues(columnValues);
+async function createItem(data) {
+  const { boardId, itemName, columnValues } = data;
 
-    const variables = {
+  const groupId = data.groupId || "topics";
+
+  const formattedColumnValues =
+    typeof columnValues === "string"
+      ? columnValues
+      : JSON.stringify(columnValues);
+  const result = await client
+    .mutation(CREATE_ITEM, {
       boardId,
       groupId,
       itemName,
-      columnValues: JSON.stringify(formattedColumnValues),
-    };
+      columnValues: formattedColumnValues,
+    })
+    .toPromise();
+  return result;
+}
 
-    const response = await mondayClient.api(query, { variables });
-    return response;
-  } catch (error) {
-    console.error("Monday API Error:", error);
-    throw new Error("Failed to create item on Monday.com");
-  }
-};
-
-export const getBoardItems = async (boardId) => {
-  try {
-    const query = `
-      query getBoardItems($boardId: [Int!]) {
-        boards(ids: $boardId) {
-          items {
-            id
-            name
-            column_values {
-              id
-              text
-              value
-              title
-              type
-              additional_info
-            }
-          }
-        }
-      }
-    `;
-    const variables = { boardId: parseInt(boardId) };
-    const response = await mondayClient.api(query, { variables });
-
-    if (response.data?.boards?.[0]?.items) {
-      return {
-        boards: [
-          {
-            items: response.data.boards[0].items.map((item) => ({
-              ...item,
-              column_values: item.column_values.map((col) => {
-                if (col.type === "dropdown" && col.value) {
-                  try {
-                    const parsedValue = JSON.parse(col.value);
-                    return {
-                      ...col,
-                      parsed_value: parsedValue,
-                      settings_str: parsedValue.settings_str || col.value,
-                    };
-                  } catch (e) {
-                    return col;
-                  }
-                }
-                return col;
-              }),
-            })),
-          },
-        ],
-      };
+const UPDATE_ITEM_NAME = gql`
+  mutation ChangeColumnValue(
+    $boardId: ID!
+    $itemId: ID!
+    $columnId: String!
+    $value: JSON!
+  ) {
+    change_column_value(
+      board_id: $boardId
+      item_id: $itemId
+      column_id: $columnId
+      value: $value
+    ) {
+      id
+      name
     }
-    return response;
-  } catch (error) {
-    console.error("Monday API Error:", error);
-    throw new Error("Failed to fetch items from Monday.com board");
   }
-};
-export const getItemById = async (itemId) => {
-  try {
-    const query = `
-      query getItemById($itemId: [Int!]) {
-        items(ids: $itemId) {
-          id
-          name
-          column_values {
-            id
-            text
-            value
-          }
-        }
-      }
-    `;
-    const variables = { itemId };
-    const response = await mondayClient.api(query, { variables });
-    return response;
-  } catch (error) {
-    console.error("Monday API Error:", error);
-    throw new Error("Failed to fetch item by ID on Monday.com");
-  }
-};
+`;
 
-export const updateItemById = async (itemId, columnValues) => {
-  try {
-    const query = `
-      mutation updateItem($itemId: Int!, $boardId: Int!, $columnValues: JSON!) {
-        change_multiple_column_values(
-          board_id: $boardId,
-          item_id: $itemId,
-          column_values: $columnValues
-        ) {
-          id
-        }
-      }
-    `;
-    const variables = {
+async function updateColumnValue(data) {
+  const { boardId, itemId, columnId, value } = data;
+  const result = await client
+    .mutation(UPDATE_ITEM_NAME, {
+      boardId,
       itemId,
-      boardId: parseInt(env.MONDAY_BOARD_ID),
-      columnValues,
-    };
-    const response = await mondayClient.api(query, { variables });
-    return response;
-  } catch (error) {
-    console.error("Monday API Error:", error);
-    throw new Error("Failed to update item on Monday.com");
-  }
-};
+      columnId,
+      value: JSON.stringify(value),
+    })
+    .toPromise();
+  return result;
+}
 
-export const deleteItemById = async (itemId) => {
-  try {
-    const query = `
-      mutation deleteItem($itemId: Int!) {
-        delete_item(item_id: $itemId) {
-          id
-        }
-      }
-    `;
-    const variables = { itemId };
-    const response = await mondayClient.api(query, { variables });
-    return response;
-  } catch (error) {
-    console.error("Monday API Error:", error);
-    throw new Error("Failed to delete item on Monday.com");
-  }
-};
+export { createItem, updateColumnValue };

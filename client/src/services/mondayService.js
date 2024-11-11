@@ -28,7 +28,7 @@ export const orderService = {
         lastName: orderData.lastName,
         quantity: orderData.quantity,
         label: orderData.labels,
-        columnValues: JSON.stringify(columnValues),
+        columnValues: columnValues,
       };
 
       console.log("Sending payload:", payload);

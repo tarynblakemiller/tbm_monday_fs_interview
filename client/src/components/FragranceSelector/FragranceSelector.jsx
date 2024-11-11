@@ -12,28 +12,26 @@ export const FragranceSelector = ({
   value = [],
 }) => {
   const [error, setInternalError] = useState(false);
+  const { fragrances, loading } = useFragranceData();
 
-  // Get fragrances directly from your hook
-  const fragrances = useFragranceData();
-
-  // Transform the fragrance data into the format expected by Monday UI Dropdown
   const FRAGRANCE_OPTIONS = useMemo(() => {
     if (!fragrances.length) return [];
 
     return fragrances.map((fragrance) => ({
-      id: fragrance.id.toString(),
-      value: fragrance.id.toString(), // Using id as value
-      label: fragrance.name, // Assuming there's a name field
+      id: fragrance.category,
+      value: fragrance.category,
+      label: `${fragrance.name} - ${fragrance.category}`,
       chipColor: Dropdown.chipColors.PRIMARY,
+      category: fragrance.category,
     }));
   }, [fragrances]);
 
   const selectedOptions = useMemo(() => {
-    return value
-      .map((val) => FRAGRANCE_OPTIONS.find((opt) => opt.id === String(val)))
-      .filter(Boolean);
+    if (!value?.length) return [];
+    return FRAGRANCE_OPTIONS.filter((option) => value.includes(option.value));
   }, [value, FRAGRANCE_OPTIONS]);
 
+  // In FragranceSelector.jsx
   const handleSelection = useCallback(
     (selected) => {
       if (!selected) {
@@ -45,11 +43,16 @@ export const FragranceSelector = ({
       const validSelection = selected.slice(0, maxSelections);
       setInternalError(validSelection.length !== maxSelections);
 
-      const selectedIds = validSelection.map((option) => option.id);
-      onChange(selectedIds);
+      // Just send what we need
+      const selectedCategories = validSelection.map((option) => option.value);
+      onChange(selectedCategories);
     },
     [maxSelections, onChange]
   );
+
+  if (loading) {
+    return <div>Loading fragrances...</div>;
+  }
 
   const showError = customError || error;
 

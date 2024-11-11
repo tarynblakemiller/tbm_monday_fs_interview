@@ -6,12 +6,10 @@ export const runMigrations = async (sequelize, runSeeders = false) => {
 
   try {
     // Run migrations
-    console.log("Running migrations...");
     await createFragrances(queryInterface, sequelize);
     console.log("Migrations completed successfully");
 
     if (runSeeders) {
-      // Run seeders
       console.log("Running seeders...");
       await seedFragrances(queryInterface);
       console.log("Seeders completed successfully");

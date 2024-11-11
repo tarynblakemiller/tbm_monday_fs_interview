@@ -5,7 +5,7 @@ export async function up(queryInterface, Sequelize) {
       name: "Vanilla Dreams",
       description:
         "A warm and sweet vanilla fragrance with hints of amber and musk",
-      category: "Oriental",
+      category: "Sweet",
       image_url: "https://example.com/images/vanilla-dreams.jpg",
       created_at: new Date(),
       updated_at: new Date(),

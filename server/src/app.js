@@ -5,9 +5,9 @@ import {
   errorHandler,
   notFoundHandler,
 } from "./middleware/index.js";
-import mondayRouter from "./routes/order.routes.js";
+import mondayRouter from "./routes/mondayRoutes.js";
 import orderRouter from "./routes/orderRoutes.js";
-import fragranceRouter from "./routes/fragrance.js";
+import fragranceRouter from "./routes/fragranceRoutes.js";
 import { validateConnection } from "./middleware/monday.middleware.js";
 
 configureMiddleware(app);

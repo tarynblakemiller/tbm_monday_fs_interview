@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const apiClient = axios.create({
-  baseURL: "/monday/api",
+  baseURL: "http://localhost:8080",
   headers: {
     "Content-Type": "application/json",
   },
@@ -103,7 +103,7 @@ apiClient.interceptors.response.use(
 // };
 
 export const orderService = {
-  create: (payload) => axios.post("/api/orders/create", payload),
+  create: (payload) => axios.post("/api/orders", payload),
   update: (id, payload) => axios.put(`/api/orders/${id}`, payload),
   delete: (id) => axios.delete(`/api/orders/${id}`),
   getFragrances: () => axios.get("/api/fragrances"),

@@ -1,72 +1,83 @@
+import axios from "axios";
 import PropTypes from "prop-types";
-import { useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useState } from "react";
 import { Divider, TextField } from "monday-ui-react-core";
 import OrderButton from "../Button/OrderButton";
 import { OrderHeader } from "../OrderHeader/OrderHeader";
-import ErrorMessage from "../../Error/Error";
-import { useOrderForm } from "../../../hooks/useOrderForm/useOrderForm.js";
-import useFragranceData from "../../../hooks/useOrderForm/useFragranceData.js";
-
-import FragranceSelector from "../../FragranceSelector/FragranceSelector.jsx";
 
 import "./OrderForm.css";
 
-const OrderForm = () => {
-  const { id } = useParams();
-  // Get fragrance data using the custom hook
-  const fragrances = useFragranceData();
+const apiClient = axios.create({
+  baseURL: "http://localhost:8080/api",
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
-  const {
-    formData,
-    setFormData,
-    handleSubmit,
-    loadOrder,
-    deleteCurrentOrder,
-    error,
-    isLoading,
-  } = useOrderForm({
-    initialState: {
-      firstName: "",
-      lastName: "",
-      quantity: 1,
-      fragranceCategories: [],
-    },
-    validate: (data) => {
-      const errors = {};
-      if (!data.firstName) errors.firstName = "Required";
-      if (!data.lastName) errors.lastName = "Required";
-      if (!data.fragranceCategories?.length)
-        errors.fragranceCategories = "Select at least one fragrance";
-      return errors;
+const OrderForm = () => {
+  const [formData, setFormData] = useState({
+    boardId: "7730832838",
+    itemName: "",
+    columnValues: {
+      text: "",
+      text6: "",
+      numbers: 0,
+      status: {
+        label: "New Order",
+      },
+      date_1: {
+        date: new Date().toISOString().split("T")[0],
+      },
     },
   });
 
-  useEffect(() => {
-    if (id) {
-      loadOrder(id);
-    }
-  }, [id, loadOrder]);
+  const handleChange = (fieldName, value) => {
+    console.log("Change received:", { fieldName, value });
 
-  const handleFormSubmit = async (e) => {
+    setFormData((prev) => {
+      let updatedValues = { ...prev.columnValues };
+
+      switch (fieldName) {
+        case "firstName":
+          updatedValues.text = value;
+          break;
+        case "lastName":
+          updatedValues.text6 = value;
+          break;
+        case "quantity":
+          updatedValues.numbers = parseInt(value) || 0;
+          break;
+      }
+
+      return {
+        ...prev,
+        columnValues: updatedValues,
+      };
+    });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await handleSubmit(!!formData.id);
-    } catch (err) {
-      console.error("Form submission error:", err);
-    }
-  };
+      const columnValues = {
+        text: formData.columnValues.text,
+        text6: formData.columnValues.text6,
+        numbers: formData.columnValues.numbers,
+        status: { label: "New Order" },
+        date_1: { date: new Date().toISOString().split("T")[0] },
+      };
 
-  const handleDelete = async () => {
-    try {
-      await deleteCurrentOrder();
-    } catch (err) {
-      console.error("Delete error:", err);
-    }
-  };
+      const response = await apiClient.post("/orders/create", {
+        boardId: formData.boardId,
+        itemName: "New Order",
+        columnValues: JSON.stringify(columnValues),
+        groupId: "topics",
+      });
 
-  const handleFragranceSelect = (selectedOptions) => {
-    setFormData({ fragranceCategories: selectedOptions });
+      console.log("Initial item created:", response.data);
+    } catch (error) {
+      console.error("Error creating item:", error);
+    }
   };
 
   return (
@@ -75,16 +86,17 @@ const OrderForm = () => {
       <Divider direction="horizontal" />
 
       <div className="order-maker-container">
-        {error && <ErrorMessage message={error} />}
+        {/* {error && <ErrorMessage message={error} />} */}
 
-        <form onSubmit={handleFormSubmit} className="input-field-container">
+        <form onSubmit={handleSubmit} className="input-field-container">
           <div className="input-grid-container">
             <div className="input-item">
               <TextField
+                name="firstName"
                 title="Client First Name"
                 placeholder="Taryn"
-                value={formData.firstName}
-                onChange={(value) => setFormData({ firstName: value })}
+                value={formData.columnValues.text}
+                onChange={(value) => handleChange("firstName", value)}
                 size={TextField.sizes.small}
                 required
               />
@@ -92,16 +104,17 @@ const OrderForm = () => {
             <TextField
               title="Client Last Name"
               placeholder="Miller"
-              value={formData.lastName}
-              onChange={(value) => setFormData({ lastName: value })}
+              value={formData.columnValues.text6}
+              onChange={(value) => handleChange("lastName", value)}
               size={TextField.sizes.small}
               required
             />
             <TextField
+              name="quantity"
               title="Quantity"
               placeholder="0"
-              value={formData.quantity}
-              onChange={(value) => setFormData({ quantity: value })}
+              value={formData.columnValues.number}
+              onChange={(value) => handleChange("quantity", value)}
               type="number"
               min="1"
               max="3"
@@ -109,26 +122,27 @@ const OrderForm = () => {
               required
             />
           </div>
-          <div className="fragrance-selector-container">
+          {/* <div className="fragrance-selector-container">
             <FragranceSelector
               onChange={handleFragranceSelect}
-              value={formData.fragranceCategories}
-              options={fragrances}
+              value={formData.dropdown.labels}
+              maxSelections={3}
             />
-          </div>
+          </div> */}
           <div className="order-btn-container">
             <OrderButton
-              onClick={handleFormSubmit}
-              text={
-                isLoading
-                  ? "Submitting..."
-                  : formData.id
-                  ? "Update Order"
-                  : "Start Order"
-              }
-              disabled={isLoading}
+              onClick={handleSubmit}
+              text={"Start Order"}
+              // text={
+              //   isLoading
+              //     ? "Submitting..."
+              //     : formData.id
+              //     ? "Update Order"
+              //     : "Start Order"
+              // }
+              // disabled={isLoading}
             />
-            {formData.id && (
+            {/* {formData.id && (
               <OrderButton
                 type="button"
                 onClick={handleDelete}
@@ -136,7 +150,7 @@ const OrderForm = () => {
                 variant="destructive"
                 className="ml-4"
               />
-            )}
+            )} */}
           </div>
         </form>
       </div>
