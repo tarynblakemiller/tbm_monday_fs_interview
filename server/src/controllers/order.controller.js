@@ -1,83 +1,64 @@
 import { mondayService } from "../services/monday.service.js";
-import Order from "../models/Order.js";
+import { env } from "../config/environment.js";
+
+const handleError = (res, error, message) => {
+  console.error(message, error);
+  res.status(500).json({
+    error: message,
+    details: error.message,
+  });
+};
 
 export const orderController = {
-  getOrders: async (req, res) => {
+  async createOrder(req, res) {
     try {
-      // const orders = await Order.findAll();
-      const mondayOrders = await mondayService.getItems(
-        process.env.MONDAY_BOARD_ID
-      );
-      res.json({ orders, mondayOrders });
+      const { firstName, lastName, ...rest } = req.body;
+      const response = await mondayService.createItem({
+        boardId: parseInt(env.MONDAY_BOARD_ID),
+        itemName: `${firstName} ${lastName}`,
+        columnValues: rest,
+      });
+      res.json(response);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      handleError(res, error, "Failed to create order in Monday.com");
     }
   },
 
-  createOrder: async (req, res) => {
+  async getOrders(req, res) {
     try {
-      const { boardId, itemName, columnValues, groupId } = req.body;
+      const boardId = env.MONDAY_BOARD_ID;
+      if (!boardId) throw new Error("MONDAY_BOARD_ID not configured");
 
-      console.log("Received request:", {
-        boardId,
-        itemName,
-        columnValues,
-        groupId,
-      });
-
-      const mondayResponse = await mondayService.createItem({
-        boardId,
-        itemName,
-        columnValues: JSON.stringify(columnValues),
-        groupId,
-      });
-
-      console.log("Monday API Response:", mondayResponse); // Let's see what we get back
-
-      if (!mondayResponse?.data?.create_item?.id) {
-        throw new Error(
-          "Failed to create item on Monday.com: No item ID returned"
-        );
+      const items = await mondayService.getItems(boardId);
+      if (!items.length) {
+        return res.status(404).json({ error: "No items found" });
       }
 
-      res.status(201).json({
-        message: "Order created successfully",
-        mondayItemId: mondayResponse.data.create_item.id,
-      });
+      res.json(items);
     } catch (error) {
-      console.error("Create order error:", error);
-      res.status(500).json({
-        error: error.message,
-        details: error.response?.data || error,
-      });
+      handleError(res, error, "Failed to fetch orders from Monday.com");
     }
   },
 
-  updateOrder: async (req, res) => {
+  async updateOrder(req, res) {
     try {
-      const { id } = req.params;
-      // const order = await Order.update(req.body, { where: { id } });
-
-      const mondayResponse = await mondayService.updateItemName({
-        boardId: process.env.MONDAY_BOARD_ID,
-        itemId: req.body.mondayItemId,
-        columnValues: JSON.stringify(req.body.columnValues),
+      const response = await mondayService.updateItem({
+        boardId: env.MONDAY_BOARD_ID,
+        itemId: req.params.id,
+        columnValues: req.body.columnValues,
       });
-
-      res.json({ mondayResponse });
+      res.json(response);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      handleError(res, error, "Failed to update order in Monday.com");
     }
   },
 
-  deleteOrder: async (req, res) => {
+  async deleteOrder(req, res) {
     try {
-      const { id } = req.params;
-      // await Order.destroy({ where: { id } });
-      await mondayService.deleteItem(req.body.mondayItemId);
-      res.json({ message: "Order deleted successfully" });
+      const response = await mondayService.deleteItem(req.params.id);
+      res.json(response);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      handleError(res, error, "Failed to delete order from Monday.com");
     }
   },
 };

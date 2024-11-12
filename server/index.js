@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import { initializeDatabase } from "./src/config/database.js";
 import db from "./src/config/database.js";
 import mondaySdk from "monday-sdk-js";
-import { validateConnection } from "./src/middleware/monday.middleware.js";
 
 dotenv.config();
 const PORT = process.env.PORT || 8080;

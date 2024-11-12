@@ -31,7 +31,6 @@ const CREATE_ITEM = gql`
 
 async function createItem(data) {
   const { boardId, itemName, columnValues } = data;
-
   const groupId = data.groupId || "topics";
 
   const formattedColumnValues =
@@ -99,6 +98,15 @@ const GET_BOARD_ITEMS = gql`
   }
 `;
 
+async function getBoardItems(boardId) {
+  const result = await client
+    .query(GET_BOARD_ITEMS, {
+      boardId,
+    })
+    .toPromise();
+  return result;
+}
+
 const DELETE_ITEM = gql`
   mutation DeleteItem($itemId: ID!) {
     delete_item(item_id: $itemId) {
@@ -107,13 +115,87 @@ const DELETE_ITEM = gql`
   }
 `;
 
+async function deleteItem(itemId) {
+  const result = await client
+    .mutation(DELETE_ITEM, {
+      itemId,
+    })
+    .toPromise();
+  return result;
+}
+
+const GET_BOARD_STRUCTURE = gql`
+  query GetBoardStructure($boardId: ID!) {
+    boards(ids: [$boardId]) {
+      columns {
+        id
+        title
+        type
+      }
+    }
+  }
+`;
+
+async function getBoardStructure(boardId) {
+  const result = await client
+    .query(GET_BOARD_STRUCTURE, {
+      boardId,
+    })
+    .toPromise();
+  return result;
+}
+
+const GET_BOARD_GROUPS = gql`
+  query GetBoardGroups($boardId: ID!) {
+    boards(ids: [$boardId]) {
+      groups {
+        id
+        title
+        items {
+          id
+          name
+        }
+      }
+    }
+  }
+`;
+
+async function getBoardGroups(boardId) {
+  const result = await client
+    .query(GET_BOARD_GROUPS, {
+      boardId,
+    })
+    .toPromise();
+  return result;
+}
+
+const GET_COLUMN_VALUES = gql`
+  query GetColumnValues($boardId: ID!, $columnId: String!) {
+    boards(ids: [$boardId]) {
+      columns(ids: [$columnId]) {
+        settings_str
+        title
+      }
+    }
+  }
+`;
+
+async function getColumnValues(boardId, columnId) {
+  const result = await client
+    .query(GET_COLUMN_VALUES, {
+      boardId,
+      columnId,
+    })
+    .toPromise();
+  return result;
+}
+
 export const mondayService = {
   createItem,
   updateItemName,
-  getItems: async (boardId) => {
-    return await client.query(GET_BOARD_ITEMS, { boardId }).toPromise();
-  },
-  deleteItem: async (itemId) => {
-    return await client.mutation(DELETE_ITEM, { itemId }).toPromise();
-  },
+  deleteItem,
+  getBoardItems,
+  getBoardStructure,
+  getBoardGroups,
+  getColumnValues,
 };
