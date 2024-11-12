@@ -17,6 +17,7 @@ export const MONDAY_SETTINGS = {
     { id: 4, name: "Floral" },
     { id: 5, name: "Herbaceous" },
     { id: 6, name: "Citrus" },
+    { id: 7, name: "Sweet" },
     { id: 8, name: "Woody" },
   ],
 };

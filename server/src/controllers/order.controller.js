@@ -1,231 +1,125 @@
-import {
-  createItem,
-  updateItemById,
-  getBoardItems,
-  getItemById,
-  deleteItemById,
-} from "../services/mondayService.js";
+import { mondayService } from "../services/monday.service.js";
+import { env } from "../config/environment.js";
+import { Order } from "../models/order.model.js";
+import { generateOrderId } from "../utils/generators.js";
 
-const formatOrderData = (data) => {
-  const labelMapping = {
-    Smokey: "1",
-    Fruity: "2",
-    Fresh: "3",
-    Floral: "4",
-    Herbaceous: "5",
-    Citrus: "6",
-    Woody: "8",
-  };
-
-  const { firstName, lastName, quantity, labels } = data;
-
-  const mappedLabels = Array.isArray(labels)
-    ? labels
-        .filter((label) => labelMapping[label])
-        .map((label) => ({ id: labelMapping[label] }))
-    : [];
-
-  return {
-    status: { label: "New Order" },
-    text: { text: firstName || "" },
-    text6: { text: lastName || "" },
-    numbers: { number: parseInt(quantity) || 0 },
-    dropdown: {
-      labels: mappedLabels,
-    },
-    date_1: { date: new Date().toISOString().split("T")[0] },
-  };
+const handleError = (res, error, message) => {
+  console.error(message, error);
+  res.status(500).json({
+    error: message,
+    details: error.message,
+  });
 };
 
-export const createOrder = async (req, res) => {
-  try {
-    const { firstName, lastName, quantity, labels } = req.body;
-
-    if (!firstName || !lastName) {
-      return res.status(400).json({
-        error: "Missing required fields",
-        required: ["firstName", "lastName"],
+export const orderController = {
+  async createOrder(req, res) {
+    try {
+      const { firstName, lastName, email, quantity, ...rest } = req.body;
+      const mondayResponse = await mondayService.createItem({
+        boardId: env.MONDAY_BOARD_ID,
+        itemName: `${firstName} ${lastName}`,
+        columnValues: rest,
       });
-    }
 
-    const columnValues = formatOrderData({
-      firstName,
-      lastName,
-      quantity,
-      labels,
-    });
-
-    console.log("Request body:", req.body);
-    console.log("Formatted column values:", columnValues);
-
-    const response = await createItem({
-      boardId: process.env.MONDAY_BOARD_ID,
-      groupId: "topics",
-      itemName: `${firstName} ${lastName}`,
-      columnValues: JSON.stringify(columnValues),
-    });
-
-    res.json({
-      success: true,
-      data: response,
-      message: "Order created successfully",
-    });
-  } catch (error) {
-    console.error("Error creating Monday.com order:", error);
-    res.status(500).json({
-      error: "Failed to create item on Monday.com",
-      details: error.message,
-    });
-  }
-};
-
-export const getOrders = async (req, res) => {
-  try {
-    const boardId = process.env.MONDAY_BOARD_ID;
-    if (!boardId) {
-      throw new Error("MONDAY_BOARD_ID not configured");
-    }
-
-    const response = await getBoardItems(boardId);
-    if (!response?.boards?.[0]?.items) {
-      return res.status(404).json({ error: "No items found" });
-    }
-
-    const formattedItems = response.boards[0].items.map((item) => {
-      const columnValues = item.column_values.reduce((acc, col) => {
-        try {
-          if (col.type === "dropdown" && col.value) {
-            acc[col.id] = JSON.parse(col.value);
-          } else {
-            acc[col.id] = col.text || col.value;
-          }
-        } catch (e) {
-          acc[col.id] = col.text || col.value;
-        }
-        return acc;
-      }, {});
-
-      return {
-        id: item.id,
-        name: item.name,
-        firstName: columnValues.text || "",
-        lastName: columnValues.text6 || "",
-        quantity: parseInt(columnValues.numbers) || 0,
-        labels: columnValues.dropdown?.labels || [],
-        status: columnValues.status,
-        date: columnValues.date_1,
-      };
-    });
-
-    res.json(formattedItems);
-  } catch (error) {
-    console.error("Error fetching Monday.com orders:", error);
-    res.status(500).json({
-      error: "Failed to fetch orders from Monday.com",
-      details: error.message,
-    });
-  }
-};
-
-export const getOrderById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (!id) {
-      return res.status(400).json({ error: "Order ID is required" });
-    }
-
-    const response = await getItemById(parseInt(id));
-    if (!response?.items?.[0]) {
-      return res.status(404).json({ error: "Order not found" });
-    }
-
-    const item = response.items[0];
-    const columnValues = item.column_values.reduce((acc, col) => {
-      try {
-        if (col.id === "dropdown" && col.value) {
-          acc[col.id] = JSON.parse(col.value);
-        } else {
-          acc[col.id] = col.text || col.value;
-        }
-      } catch (e) {
-        acc[col.id] = col.text || col.value;
+      // stores the order also locally to the db
+      if (mondayResponse.data?.create_item?.id) {
+        await Order.create({
+          order_id: generateOrderId(),
+          monday_item_id: mondayResponse.data.create_item.id,
+          monday_board_id: env.MONDAY_BOARD_ID,
+          client_first_name: firstName,
+          client_last_name: lastName,
+          client_email: email,
+          quantity,
+          order_status: "NEW",
+          ...rest,
+        });
       }
-      return acc;
-    }, {});
 
-    res.json({
-      id: item.id,
-      name: item.name,
-      firstName: columnValues.text || "",
-      lastName: columnValues.text6 || "",
-      quantity: parseInt(columnValues.numbers) || 0,
-      labels: columnValues.dropdown?.labels || [],
-      status: columnValues.status,
-      date: columnValues.date_1,
-    });
-  } catch (error) {
-    console.error("Error fetching Monday.com order:", error);
-    res.status(500).json({
-      error: "Failed to fetch order from Monday.com",
-      details: error.message,
-    });
-  }
-};
-
-export const updateOrder = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { firstName, lastName, quantity, labels } = req.body;
-
-    if (!id) {
-      return res.status(400).json({ error: "Order ID is required" });
+      res.json(mondayResponse);
+    } catch (error) {
+      handleError(res, error, "Failed to create order in Monday.com");
     }
+  },
 
-    const columnValues = formatOrderData({
-      firstName,
-      lastName,
-      quantity,
-      labels,
-    });
+  async getOrders(req, res) {
+    try {
+      const boardId = env.MONDAY_BOARD_ID;
+      if (!boardId) throw new Error("MONDAY_BOARD_ID not configured");
 
-    const response = await updateItemById(
-      parseInt(id),
-      JSON.stringify(columnValues)
-    );
+      // Get from Monday.com
+      const mondayItems = await mondayService.getItems(boardId);
+      if (!mondayItems.length) {
+        return res.status(404).json({ error: "No items found" });
+      }
 
-    res.json({
-      success: true,
-      data: response,
-      message: "Order updated successfully",
-    });
-  } catch (error) {
-    console.error("Error updating Monday.com order:", error);
-    res.status(500).json({
-      error: "Failed to update order on Monday.com",
-      details: error.message,
-    });
-  }
-};
+      // Sync status with local DB
+      for (const item of mondayItems) {
+        await Order.update(
+          {
+            order_status: item.column_values.status?.text || "NEW",
+          },
+          {
+            where: { monday_item_id: item.id },
+          }
+        );
+      }
 
-export const deleteOrder = async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (!id) {
-      return res.status(400).json({ error: "Order ID is required" });
+      res.json(mondayItems);
+    } catch (error) {
+      handleError(res, error, "Failed to fetch orders from Monday.com");
     }
+  },
 
-    const response = await deleteItemById(parseInt(id));
+  async updateOrder(req, res) {
+    try {
+      // Update in Monday.com
+      const mondayResponse = await mondayService.updateItem({
+        boardId: env.MONDAY_BOARD_ID,
+        itemId: req.params.id,
+        columnValues: req.body.columnValues,
+      });
 
-    res.json({
-      success: true,
-      message: "Order deleted successfully",
-      data: response,
-    });
-  } catch (error) {
-    console.error("Error deleting Monday.com order:", error);
-    res.status(500).json({
-      error: "Failed to delete order from Monday.com",
-      details: error.message,
-    });
-  }
+      // Update local DB
+      if (mondayResponse.data) {
+        await Order.update(req.body, {
+          where: { monday_item_id: req.params.id },
+        });
+      }
+
+      res.json(mondayResponse);
+    } catch (error) {
+      handleError(res, error, "Failed to update order in Monday.com");
+    }
+  },
+
+  async deleteOrder(req, res) {
+    try {
+      // Delete from Monday.com
+      const mondayResponse = await mondayService.deleteItem(req.params.id);
+
+      // Delete from local DB
+      if (mondayResponse.data) {
+        await Order.destroy({
+          where: { monday_item_id: req.params.id },
+        });
+      }
+
+      res.json(mondayResponse);
+    } catch (error) {
+      handleError(res, error, "Failed to delete order from Monday.com");
+    }
+  },
+
+  // New method to check local DB
+  async getLocalOrders(req, res) {
+    try {
+      const orders = await Order.findAll({
+        include: ["fragrances"],
+      });
+      res.json(orders);
+    } catch (error) {
+      handleError(res, error, "Failed to fetch orders from local database");
+    }
+  },
 };

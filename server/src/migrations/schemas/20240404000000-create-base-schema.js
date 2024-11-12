@@ -1,11 +1,8 @@
-import { DataTypes } from "sequelize";
-
-export async function up(queryInterface, Sequelize) {
+export async function up(queryInterface, { DataTypes }) {
   await queryInterface.createTable("fragrances", {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       primaryKey: true,
-      autoIncrement: true,
     },
     fragrance_id: {
       type: DataTypes.STRING,
@@ -30,17 +27,20 @@ export async function up(queryInterface, Sequelize) {
     },
     created_at: {
       type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      defaultValue: queryInterface.sequelize.literal("CURRENT_TIMESTAMP"),
     },
     updated_at: {
       type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      defaultValue: queryInterface.sequelize.literal("CURRENT_TIMESTAMP"),
     },
+  });
+
+  await queryInterface.addIndex("fragrances", ["category"], {
+    name: "fragrances_category_idx",
   });
 }
 
-export async function down(queryInterface, Sequelize) {
+export async function down(queryInterface) {
+  await queryInterface.removeIndex("fragrances", "fragrances_category_idx");
   await queryInterface.dropTable("fragrances");
 }

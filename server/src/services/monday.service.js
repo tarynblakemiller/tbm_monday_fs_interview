@@ -1,5 +1,4 @@
 import { gql } from "graphql-tag";
-import { format } from "sequelize/lib/utils";
 import { createClient, fetchExchange } from "urql";
 
 const client = createClient({
@@ -32,7 +31,6 @@ const CREATE_ITEM = gql`
 
 async function createItem(data) {
   const { boardId, itemName, columnValues } = data;
-
   const groupId = data.groupId || "topics";
 
   const formattedColumnValues =
@@ -51,7 +49,7 @@ async function createItem(data) {
 }
 
 const UPDATE_ITEM_NAME = gql`
-  mutation ChangeColumnValue(
+  mutation ChangeItemName(
     $boardId: ID!
     $itemId: ID!
     $columnId: String!
@@ -64,22 +62,140 @@ const UPDATE_ITEM_NAME = gql`
       value: $value
     ) {
       id
-      name
     }
   }
 `;
 
-async function updateColumnValue(data) {
-  const { boardId, itemId, columnId, value } = data;
+async function updateItemName(data) {
+  const { boardId, itemId } = data;
+  const value = JSON.stringify(`Order ${itemId}`);
+  const columnId = data.columnId || "name";
+
   const result = await client
     .mutation(UPDATE_ITEM_NAME, {
       boardId,
       itemId,
       columnId,
-      value: JSON.stringify(value),
+      value,
     })
     .toPromise();
   return result;
 }
 
-export { createItem, updateColumnValue };
+const GET_BOARD_ITEMS = gql`
+  query GetBoardItems($boardId: ID!) {
+    boards(ids: [$boardId]) {
+      items {
+        id
+        name
+        column_values {
+          id
+          text
+          value
+        }
+      }
+    }
+  }
+`;
+
+async function getBoardItems(boardId) {
+  const result = await client
+    .query(GET_BOARD_ITEMS, {
+      boardId,
+    })
+    .toPromise();
+  return result;
+}
+
+const DELETE_ITEM = gql`
+  mutation DeleteItem($itemId: ID!) {
+    delete_item(item_id: $itemId) {
+      id
+    }
+  }
+`;
+
+async function deleteItem(itemId) {
+  const result = await client
+    .mutation(DELETE_ITEM, {
+      itemId,
+    })
+    .toPromise();
+  return result;
+}
+
+const GET_BOARD_STRUCTURE = gql`
+  query GetBoardStructure($boardId: ID!) {
+    boards(ids: [$boardId]) {
+      columns {
+        id
+        title
+        type
+      }
+    }
+  }
+`;
+
+async function getBoardStructure(boardId) {
+  const result = await client
+    .query(GET_BOARD_STRUCTURE, {
+      boardId,
+    })
+    .toPromise();
+  return result;
+}
+
+const GET_BOARD_GROUPS = gql`
+  query GetBoardGroups($boardId: ID!) {
+    boards(ids: [$boardId]) {
+      groups {
+        id
+        title
+        items {
+          id
+          name
+        }
+      }
+    }
+  }
+`;
+
+async function getBoardGroups(boardId) {
+  const result = await client
+    .query(GET_BOARD_GROUPS, {
+      boardId,
+    })
+    .toPromise();
+  return result;
+}
+
+const GET_COLUMN_VALUES = gql`
+  query GetColumnValues($boardId: ID!, $columnId: String!) {
+    boards(ids: [$boardId]) {
+      columns(ids: [$columnId]) {
+        settings_str
+        title
+      }
+    }
+  }
+`;
+
+async function getColumnValues(boardId, columnId) {
+  const result = await client
+    .query(GET_COLUMN_VALUES, {
+      boardId,
+      columnId,
+    })
+    .toPromise();
+  return result;
+}
+
+export const mondayService = {
+  createItem,
+  updateItemName,
+  deleteItem,
+  getBoardItems,
+  getBoardStructure,
+  getBoardGroups,
+  getColumnValues,
+};

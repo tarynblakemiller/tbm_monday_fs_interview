@@ -19,13 +19,4 @@ router.get("/health", (req, res) => {
   });
 });
 
-// router.use((err, req, res, next) => {
-//   console.error("API Error:", err);
-//   res.status(500).json({
-//     error: "Internal Server Error",
-//     message: err.message,
-//     details: process.env.NODE_ENV === "development" ? err.stack : undefined,
-//   });
-// });
-
 export default router;

@@ -7,10 +7,12 @@ export const OrderHeader = ({ onFilterClick }) => (
   <div className="order-maker-header">
     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
       <Heading type="h2">Order Maker</Heading>
+
       <IconButton
         icon={Filter}
         ariaLabel="Filter the widget by everything"
         size={IconButton.sizes.SMALL}
+        isClickable={true}
         onClick={onFilterClick}
       />
     </div>
