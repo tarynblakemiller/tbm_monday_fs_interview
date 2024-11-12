@@ -33,14 +33,14 @@ const OrderForm = () => {
         date: new Date().toISOString().split("T")[0],
       },
 
-      // orderData: {
-      //   firstName: "",
-      //   lastName: "",
-      //   quantity: 0,
-      //   fragrances: [],
-      //   status: "NEW",
-      //   orderDate: new Date().toISOString().split("T")[0],
-      // },
+      orderData: {
+        firstName: "",
+        lastName: "",
+        quantity: 0,
+        fragrances: [],
+        status: "NEW",
+        orderDate: new Date().toISOString().split("T")[0],
+      },
     },
   });
 
@@ -99,28 +99,30 @@ const OrderForm = () => {
       };
 
       console.log(columnValues);
-      // 2. Save to database first
-      // const dbResponse = await apiClient.post("/orders", {
-      //   ...formData.orderData,
-      // });
 
-      // 3. Create Monday.com item with formatted column values
       const mondayResponse = await apiClient.post("/orders", {
         boardId: formData.boardId,
         itemName: "New Order",
-        columnValues: JSON.stringify(columnValues), // Use formatted columnValues here
+        columnValues: JSON.stringify(columnValues),
         groupId: "topics",
       });
 
       console.log("Monday Response:", mondayResponse);
 
       const mondayItemId = mondayResponse.data.id;
+      if (mondayResponse.data) {
+        const orderData = {
+          client_first_name: columnValues.text,
+          client_last_name: columnValues.text6,
+          quantity: columnValues.numbers,
+          monday_item_id: mondayResponse.data.id,
+          monday_board_id: formData.boardId,
+        };
 
-      // await apiClient.put(`/orders/${dbResponse.data.id}`, {
-      //   mondayItemId: mondayItemId,
-      // });
+        const dbResponse = await apiClient.post("/orders/local", orderData);
+        console.log("Order created successfully:", dbResponse.data);
+      }
 
-      // console.log("Order created successfully:", dbResponse.data);
       console.log(
         "Order created successfully:",
         mondayResponse.data,

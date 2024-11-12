@@ -5,9 +5,13 @@ export class Fragrance extends Model {
     return super.init(
       {
         id: {
-          type: DataTypes.UUID,
-          defaultValue: DataTypes.UUIDV4,
+          type: DataTypes.STRING,
           primaryKey: true,
+        },
+        fragrance_id: {
+          type: DataTypes.STRING,
+          allowNull: false,
+          unique: true,
         },
         name: {
           type: DataTypes.STRING,
@@ -15,13 +19,13 @@ export class Fragrance extends Model {
         },
         description: {
           type: DataTypes.TEXT,
-          allowNull: false,
+          allowNull: true,
         },
         category: {
           type: DataTypes.STRING,
           allowNull: false,
         },
-        imageUrl: {
+        image_url: {
           type: DataTypes.STRING,
           allowNull: true,
         },
@@ -30,7 +34,17 @@ export class Fragrance extends Model {
         sequelize,
         modelName: "Fragrance",
         tableName: "fragrances",
+        underscored: true,
+        timestamps: true,
       }
     );
+  }
+
+  static associate(models) {
+    this.belongsToMany(models.Order, {
+      through: models.OrderFragrances,
+      foreignKey: "fragrance_id",
+      otherKey: "order_id",
+    });
   }
 }
