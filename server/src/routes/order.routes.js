@@ -9,5 +9,6 @@ router.put("/:id", orderController.updateOrder);
 router.delete("/:id", orderController.deleteOrder);
 
 router.get("/local", orderController.getLocalOrders);
+router.post("/local", orderController.createOrder);
 
 export default router;

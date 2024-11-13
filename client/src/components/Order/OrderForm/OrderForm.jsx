@@ -33,14 +33,14 @@ const OrderForm = () => {
         date: new Date().toISOString().split("T")[0],
       },
 
-      orderData: {
-        firstName: "",
-        lastName: "",
-        quantity: 0,
-        fragrances: [],
-        status: "NEW",
-        orderDate: new Date().toISOString().split("T")[0],
-      },
+      // orderData: {
+      //   firstName: "",
+      //   lastName: "",
+      //   quantity: 0,
+      //   fragrances: [],
+      //   status: "NEW",
+      //   orderDate: new Date().toISOString().split("T")[0],
+      // },
     },
   });
 
@@ -77,7 +77,6 @@ const OrderForm = () => {
       return {
         ...prev,
         columnValues: updatedValues,
-        // orderData: updatedOrderData,
       };
     });
   };
@@ -85,37 +84,34 @@ const OrderForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const { text, text6, numbers, dropdown, status, date_1 } =
+        formData.columnValues;
       const columnValues = {
-        text: formData.columnValues.text,
-        text6: formData.columnValues.text6,
-        numbers: formData.columnValues.numbers,
-        dropdown: {
-          labels: formData.columnValues.dropdown.labels.map(
-            (label) => label.id
-          ),
-        },
-        status: { label: "New Order" },
-        date_1: { date: new Date().toISOString().split("T")[0] },
+        text,
+        text6,
+        numbers,
+        dropdown: { labels: dropdown.labels.map((label) => label.id) },
+        status,
+        date_1,
       };
 
-      console.log(columnValues);
-
+      // console.log(columnValues);
+      console.log("BOARD ID", formData.boardId);
       const mondayResponse = await apiClient.post("/orders", {
         boardId: formData.boardId,
-        itemName: "New Order",
+        itemName: `${text} ${text6}`,
         columnValues: JSON.stringify(columnValues),
         groupId: "topics",
       });
-
       console.log("Monday Response:", mondayResponse);
-
       const mondayItemId = mondayResponse.data.id;
+
       if (mondayResponse.data) {
         const orderData = {
           client_first_name: columnValues.text,
           client_last_name: columnValues.text6,
           quantity: columnValues.numbers,
-          monday_item_id: mondayResponse.data.id,
+          monday_item_id: mondayResponse.mondayItemId,
           monday_board_id: formData.boardId,
         };
 
@@ -124,9 +120,8 @@ const OrderForm = () => {
       }
 
       console.log(
-        "Order created successfully:",
-        mondayResponse.data,
-        mondayItemId
+        "Order created successfully in Monday.com:",
+        mondayResponse.data
       );
     } catch (error) {
       console.error("Error creating order:", error);

@@ -4,11 +4,6 @@ export class Order extends Model {
   static initialize(sequelize) {
     return super.init(
       {
-        id: {
-          type: DataTypes.UUID,
-          defaultValue: DataTypes.UUIDV4,
-          primaryKey: true,
-        },
         order_id: {
           type: DataTypes.STRING,
           unique: true,
@@ -20,22 +15,20 @@ export class Order extends Model {
           allowNull: true,
         },
         monday_board_id: {
-          // Add this
           type: DataTypes.STRING,
-          allowNull: false,
+          allowNull: true,
         },
-        // Client Information
         client_first_name: {
           type: DataTypes.STRING,
-          allowNull: false,
+          allowNull: true,
         },
         client_last_name: {
           type: DataTypes.STRING,
-          allowNull: false,
+          allowNull: true,
         },
         client_email: {
           type: DataTypes.STRING,
-          allowNull: false,
+          allowNull: true,
           validate: {
             isEmail: true,
           },
@@ -59,7 +52,7 @@ export class Order extends Model {
         },
         quantity: {
           type: DataTypes.INTEGER,
-          allowNull: false,
+          allowNull: true,
           validate: {
             min: 1,
             max: 3,
