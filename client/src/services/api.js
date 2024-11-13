@@ -7,39 +7,6 @@ export const apiClient = axios.create({
   },
 });
 
-apiClient.interceptors.request.use((request) => {
-  console.log("Request Details:", {
-    method: request.method?.toUpperCase(),
-    url: request.url,
-    data: request.data,
-    headers: request.headers,
-    baseURL: request.baseURL,
-  });
-  return request;
-});
-
-apiClient.interceptors.response.use(
-  (response) => {
-    console.log("Response Details:", {
-      status: response.status,
-      url: response.config.url,
-      data: response.data,
-    });
-    return response;
-  },
-  (error) => {
-    console.error("API Error Details:", {
-      url: error.config?.url,
-      method: error.config?.method,
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message,
-      stack: error.stack,
-    });
-    return Promise.reject(error);
-  }
-);
-
 export const orderService = {
   create: (payload) => axios.post("/api/orders", payload),
   update: (id, payload) => axios.put(`/api/orders/${id}`, payload),

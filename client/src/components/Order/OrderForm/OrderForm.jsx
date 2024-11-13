@@ -1,12 +1,16 @@
 import axios from "axios";
 import PropTypes from "prop-types";
 import { useState } from "react";
-import { Divider, TextField } from "monday-ui-react-core";
+import { Divider, Flex, TextField } from "monday-ui-react-core";
 import OrderButton from "../Button/OrderButton";
 import { OrderHeader } from "../OrderHeader/OrderHeader";
 import MultiSelect from "../../MultiSelect/MultiSelect";
+import Error from "../../Error/Error";
+import SimpleFragranceManager from "../../Fragrance/FragranceManager.jsx";
 
 import "./OrderForm.css";
+import useFragrances from "../../../hooks/useFragrances/useFragrances";
+import { generateOrderId } from "../../../../../server/src/utils/generators";
 
 const apiClient = axios.create({
   baseURL: "http://localhost:8080/api",
@@ -16,7 +20,7 @@ const apiClient = axios.create({
 });
 
 const OrderForm = () => {
-  const [formData, setFormData] = useState({
+  const initialState = {
     boardId: "7730832838",
     item_name: "New Order",
     columnValues: {
@@ -32,43 +36,29 @@ const OrderForm = () => {
       date_1: {
         date: new Date().toISOString().split("T")[0],
       },
-
-      orderData: {
-        firstName: "",
-        lastName: "",
-        quantity: 0,
-        fragrances: [],
-        status: "NEW",
-        orderDate: new Date().toISOString().split("T")[0],
-      },
     },
-  });
+  };
+  const [formData, setFormData] = useState(initialState);
+  const [error, setError] = useState(undefined);
+  const { data, loading, error: fragranceError } = useFragrances(true);
 
   const handleChange = (fieldName, value) => {
-    console.log("Change received:", { fieldName, value });
-
     setFormData((prev) => {
       let updatedValues = { ...prev.columnValues };
-      // const updatedOrderData = { ...prev.orderData };
       console.log("UPDATED VALUES", updatedValues);
       switch (fieldName) {
         case "firstName":
           updatedValues.text = value;
-          // updatedOrderData.firstName = value;
           break;
         case "lastName":
           updatedValues.text6 = value;
-          // updatedOrderData.lastName = value;
           break;
         case "quantity":
           updatedValues.numbers = parseInt(value) || 0;
-          // updatedOrderData.quantity = parseInt(value) || 0;
           break;
         case "fragrances": {
           updatedValues.dropdown = {
-            labels: value.map((label) => ({
-              id: label.id || label,
-            })),
+            labels: value, // Direct assignment since MultiSelect returns correct format
           };
           break;
         }
@@ -77,7 +67,6 @@ const OrderForm = () => {
       return {
         ...prev,
         columnValues: updatedValues,
-        // orderData: updatedOrderData,
       };
     });
   };
@@ -102,112 +91,91 @@ const OrderForm = () => {
 
       const mondayResponse = await apiClient.post("/orders", {
         boardId: formData.boardId,
-        itemName: "New Order",
-        columnValues: JSON.stringify(columnValues),
+        itemName: generateOrderId(),
+        columnValues,
         groupId: "topics",
       });
-
       console.log("Monday Response:", mondayResponse);
 
-      const mondayItemId = mondayResponse.data.id;
-      if (mondayResponse.data) {
-        const orderData = {
-          client_first_name: columnValues.text,
-          client_last_name: columnValues.text6,
-          quantity: columnValues.numbers,
-          monday_item_id: mondayResponse.data.id,
-          monday_board_id: formData.boardId,
-        };
-
-        const dbResponse = await apiClient.post("/orders/local", orderData);
-        console.log("Order created successfully:", dbResponse.data);
+      const { data, status } = mondayResponse;
+      if (status === 200) {
+        console.log(data.data.create_item.id);
+        setFormData(initialState);
+        return data.data.create_item.id;
+      } else {
+        return undefined;
       }
-
-      console.log(
-        "Order created successfully:",
-        mondayResponse.data,
-        mondayItemId
-      );
     } catch (error) {
-      console.error("Error creating order:", error);
+      console.error(error);
+      setError(error);
     }
   };
 
   return (
-    <div className="order-wrapper">
-      <OrderHeader onFilterClick={() => console.log("Filter clicked")} />
-      <Divider direction="horizontal" />
+    <div>
+      <div className="order-wrapper">
+        <OrderHeader onFilterClick={() => console.log("Filter clicked")} />
+        <Divider direction="horizontal" />
+        <Flex>
+          <SimpleFragranceManager />
+        </Flex>
 
-      <div className="order-maker-container">
-        {/* {error && <ErrorMessage message={error} />} */}
+        <div className="order-maker-container">
+          {error && <Error message={error} />}
 
-        <form onSubmit={handleSubmit} className="input-field-container">
-          <div className="input-grid-container">
-            <div className="input-item">
+          <form onSubmit={handleSubmit} className="input-field-container">
+            <div className="input-grid-container">
+              <div className="input-item">
+                <TextField
+                  name="firstName"
+                  title="Client First Name"
+                  placeholder="Taryn"
+                  value={formData.columnValues.text}
+                  onChange={(value) => handleChange("firstName", value)}
+                  size={TextField.sizes.small}
+                  required
+                />
+              </div>
               <TextField
-                name="firstName"
-                title="Client First Name"
-                placeholder="Taryn"
-                value={formData.columnValues.text}
-                onChange={(value) => handleChange("firstName", value)}
+                title="Client Last Name"
+                placeholder="Miller"
+                value={formData.columnValues.text6}
+                onChange={(value) => handleChange("lastName", value)}
+                size={TextField.sizes.small}
+                required
+              />
+              <TextField
+                name="quantity"
+                title="Quantity"
+                placeholder="0"
+                value={formData.columnValues.number}
+                onChange={(value) => handleChange("quantity", value)}
+                type="number"
+                min="1"
+                max="3"
                 size={TextField.sizes.small}
                 required
               />
             </div>
-            <TextField
-              title="Client Last Name"
-              placeholder="Miller"
-              value={formData.columnValues.text6}
-              onChange={(value) => handleChange("lastName", value)}
-              size={TextField.sizes.small}
-              required
-            />
-            <TextField
-              name="quantity"
-              title="Quantity"
-              placeholder="0"
-              value={formData.columnValues.number}
-              onChange={(value) => handleChange("quantity", value)}
-              type="number"
-              min="1"
-              max="3"
-              size={TextField.sizes.small}
-              required
-            />
-          </div>
-          <div>
-            <MultiSelect
-              value={formData.columnValues.dropdown.labels}
-              onChange={(selected) => handleChange("fragrances", selected)}
-              maxSelections={3}
-              label="Select Scents"
-              optionsEndpoint="/fragrances"
-            />
-          </div>
-          <div className="order-btn-container">
-            <OrderButton
-              onClick={handleSubmit}
-              text={"Start Order"}
-              // text={
-              //   isLoading
-              //     ? "Submitting..."
-              //     : formData.id
-              //     ? "Update Order"
-              //     : "Start Order"
-              // }
-              // disabled={isLoading}
-            />
-            {/* {formData.id && (
-              <OrderButton
-                type="button"
-                onClick={handleDelete}
-                text="Delete Order"
-                variant="destructive"
-                className="ml-4"
+            <div>
+              <MultiSelect
+                value={formData.columnValues.dropdown.labels}
+                onChange={(selected) => handleChange("fragrances", selected)}
+                maxSelections={3}
+                label="Select Scents"
+                options={data}
+                loading={loading}
+                error={fragranceError}
               />
-            )} */}
-          </div>
-        </form>
+            </div>
+            <div className="order-btn-container">
+              <OrderButton onClick={handleSubmit} text={"Start Order"} />
+            </div>
+          </form>
+        </div>
+      </div>
+      <div>
+        <div className="fragrance-options-container"></div>
       </div>
     </div>
   );

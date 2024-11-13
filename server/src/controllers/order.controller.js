@@ -1,5 +1,5 @@
 import { mondayService } from "../services/monday.service.js";
-import { env } from "../config/environment.js";
+// import { env } from "../config/environment.js";
 import { Order } from "../models/order.model.js";
 import { generateOrderId } from "../utils/generators.js";
 
@@ -16,25 +16,32 @@ export const orderController = {
     try {
       const { firstName, lastName, email, quantity, ...rest } = req.body;
       const mondayResponse = await mondayService.createItem({
-        boardId: env.MONDAY_BOARD_ID,
+        boardId: process.env.MONDAY_BOARD_ID,
         itemName: `${firstName} ${lastName}`,
         columnValues: rest,
       });
 
-      // stores the order also locally to the db
-      if (mondayResponse.data?.create_item?.id) {
-        await Order.create({
-          order_id: generateOrderId(),
-          monday_item_id: mondayResponse.data.create_item.id,
-          monday_board_id: env.MONDAY_BOARD_ID,
-          client_first_name: firstName,
-          client_last_name: lastName,
-          client_email: email,
-          quantity,
-          order_status: "NEW",
-          ...rest,
-        });
+      const mondayItemId = mondayResponse.data?.create_item?.id;
+      if (!mondayItemId) {
+        throw new Error("Failed to retrieve Monday.com item ID");
       }
+
+      // Log data for troubleshooting
+      const orderData = {
+        order_id: generateOrderId(),
+        monday_item_id: mondayItemId,
+        monday_board_id: process.env.MONDAY_BOARD_ID,
+        client_first_name: null,
+        client_last_name: null,
+        client_email: null,
+        quantity,
+        order_status: "NEW",
+        ...rest,
+      };
+      console.log("Order Data:", orderData);
+
+      // Create order in local database
+      await Order.create(orderData);
 
       res.json(mondayResponse);
     } catch (error) {
@@ -44,7 +51,7 @@ export const orderController = {
 
   async getOrders(req, res) {
     try {
-      const boardId = env.MONDAY_BOARD_ID;
+      const boardId = process.env.MONDAY_BOARD_ID;
       if (!boardId) throw new Error("MONDAY_BOARD_ID not configured");
 
       // Get from Monday.com

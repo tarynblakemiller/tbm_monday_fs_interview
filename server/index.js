@@ -26,6 +26,7 @@ const startServer = async () => {
       console.log(`- http://localhost:${PORT}/health`);
       console.log(`- http://localhost:${PORT}/api/fragrances`);
       console.log(`- http://localhost:${PORT}/api/orders`);
+      console.log(`- http://localhost:${PORT}/api/orders/local`);
     });
   } catch (error) {
     console.error("Failed to start server:", error);
