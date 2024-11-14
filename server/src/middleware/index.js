@@ -27,6 +27,30 @@ export const configureMiddleware = (app) => {
     })
   );
 };
+export const configureSecurityMiddleware = (app) => {
+  app.use((req, res, next) => {
+    res.setHeader(
+      "Content-Security-Policy",
+      [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net",
+        "style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net",
+        "img-src 'self' data: https: http:",
+        "font-src 'self' https://unpkg.com https://cdn.jsdelivr.net",
+        "connect-src 'self' https://api.monday.com wss: https://unpkg.com https://cdn.jsdelivr.net",
+        "worker-src 'self' blob:",
+        "frame-src 'self'",
+        "object-src 'none'",
+      ].join("; ")
+    );
+
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "SAMEORIGIN");
+    res.setHeader("X-XSS-Protection", "1; mode=block");
+
+    next();
+  });
+};
 
 export const errorHandler = (err, req, res, next) => {
   console.error(err.stack);

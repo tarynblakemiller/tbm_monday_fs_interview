@@ -1,5 +1,3 @@
-import { Model, DataTypes } from "sequelize";
-
 export class Fragrance extends Model {
   static initialize(sequelize) {
     return super.init(
@@ -34,17 +32,8 @@ export class Fragrance extends Model {
         sequelize,
         modelName: "Fragrance",
         tableName: "fragrances",
-        underscored: true,
         timestamps: true,
       }
     );
-  }
-
-  static associate(models) {
-    this.belongsToMany(models.Order, {
-      through: models.OrderFragrances,
-      foreignKey: "fragrance_id",
-      otherKey: "order_id",
-    });
   }
 }

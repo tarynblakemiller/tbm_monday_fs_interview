@@ -6,7 +6,7 @@ import OrderButton from "../Button/OrderButton";
 import { OrderHeader } from "../OrderHeader/OrderHeader";
 import MultiSelect from "../../MultiSelect/MultiSelect";
 import Error from "../../Error/Error";
-import SimpleFragranceManager from "../../Fragrance/FragranceManager.jsx";
+import FragranceManager from "../../FragranceManager/FragranceManager.tsx";
 
 import "./OrderForm.css";
 import useFragrances from "../../../hooks/useFragrances/useFragrances";
@@ -117,7 +117,7 @@ const OrderForm = () => {
         <OrderHeader onFilterClick={() => console.log("Filter clicked")} />
         <Divider direction="horizontal" />
         <Flex>
-          <SimpleFragranceManager />
+          <FragranceManager />
         </Flex>
 
         <div className="order-maker-container">

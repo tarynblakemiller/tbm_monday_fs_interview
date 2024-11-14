@@ -1,4 +1,3 @@
-// 20240404000000-fragrances.js
 function generateFragranceData(index) {
   const paddedIndex = String(index + 1).padStart(3, "0");
   return {

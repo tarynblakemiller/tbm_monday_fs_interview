@@ -1,5 +1,6 @@
 import { gql } from "graphql-tag";
 import { createClient, fetchExchange } from "urql";
+import { generateOrderId } from "../utils/generators.js";
 
 const client = createClient({
   url: "https://api.monday.com/v2",
@@ -30,8 +31,10 @@ const CREATE_ITEM = gql`
 `;
 
 async function createItem(data) {
-  const { boardId, itemName, columnValues } = data;
+  const uniqueID = generateOrderId();
+  const { boardId, columnValues } = data;
   const groupId = data.groupId || "topics";
+  let itemName = uniqueID;
 
   const formattedColumnValues =
     typeof columnValues === "string"

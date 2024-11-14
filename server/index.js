@@ -1,8 +1,8 @@
 import app from "./src/app.js";
 import dotenv from "dotenv";
-import { initializeDatabase } from "./src/config/database.js";
 import db from "./src/config/database.js";
 import mondaySdk from "monday-sdk-js";
+import { runMigrations } from "./src/migrations/index.js";
 
 dotenv.config();
 const PORT = process.env.PORT || 8080;
@@ -13,10 +13,11 @@ mondayClient.setApiVersion("2024-10");
 
 const startServer = async () => {
   try {
-    await initializeDatabase();
-
+    await db.sequelize.query("DROP SCHEMA public CASCADE;");
+    await db.sequelize.query("CREATE SCHEMA public;");
     await db.sequelize.authenticate();
-    console.log("Database connection has been established successfully.");
+    await db.sequelize.sync({ force: true });
+    await runMigrations(db.sequelize, true);
 
     app.listen(PORT, () => {
       console.log("\n🚀 Server is ready!");

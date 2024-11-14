@@ -6,38 +6,6 @@ dotenv.config();
 const monday = mondaySdk();
 monday.setToken(process.env.MONDAY_API_TOKEN);
 
-const testConnection = async () => {
-  try {
-    const query = `query { me { name } }`;
-    const response = await monday.api(query);
-    console.log("Connection test:", response);
-  } catch (error) {
-    console.error("Connection test failed:", error);
-    return;
-  }
-};
-
-const createBasicItem = async () => {
-  const query = `
-    mutation {
-      create_item (
-        board_id: 7730832838,
-        group_id: "topics",
-        item_name: "Test Item"
-      ) {
-        id
-      }
-    }
-  `;
-
-  try {
-    const response = await monday.api(query);
-    console.log("Create item response:", response);
-  } catch (error) {
-    console.error("Create item failed:", error);
-  }
-};
-
 export const env = {
   NODE_ENV: process.env.NODE_ENV || "development",
   PORT: process.env.PORT || 8080,
