@@ -27,7 +27,7 @@ const FragranceManager: React.FC<FragranceManagerProps> = ({ onClose }) => {
     refetch,
   } = useFragrances(true) as UseFragrancesReturn;
 
-  const [showManager, setShowManager] = useState<boolean>(false);
+  const [showForm, setShowForm] = useState<boolean>(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_STATE);
 
@@ -101,104 +101,104 @@ const FragranceManager: React.FC<FragranceManagerProps> = ({ onClose }) => {
     }
   };
 
-  if (!showManager) {
-    return (
-      <Button
-        onClick={() => setShowManager(true)}
-        kind={Button.kinds.SECONDARY}
-        size={Button.sizes.XS}
-      >
-        Manage Fragrances
-      </Button>
-    );
-  }
-
   return (
-    <div>
-      <form onSubmit={handleSubmit} className="fragrance-form">
-        <TextField
-          name="id"
-          placeholder="ID"
-          value={formData.id?.toString() || ""}
-          onChange={handleTextChange("id")}
-          size={TextField.sizes.MEDIUM}
-          // type="number"
-        />
-
-        <TextField
-          name="fragrance_id"
-          placeholder="Fragrance ID"
-          value={formData.fragrance_id}
-          onChange={handleTextChange("fragrance_id")}
-          size={TextField.sizes.MEDIUM}
-        />
-
-        <Dropdown
-          placeholder="Select Category"
-          options={categories}
-          value={
-            categories.find((cat) => cat.value === formData.category) || null
-          }
-          onChange={handleDropdownChange}
-          required
-        />
-
-        <TextField
-          name="description"
-          placeholder="Description"
-          value={formData.description}
-          onChange={handleTextChange("description")}
-          size={TextField.sizes.MEDIUM}
-          required
-        />
-        <Button kind={Button.kinds.SECONDARY} size={Button.sizes.XS}>
-          {editingId ? "Update" : "Add"} Fragrance
-        </Button>
-      </form>
-      <div className="fragrance-list">
-        {fragrances?.map((fragrance: Fragrance) => (
-          <div key={fragrance.id} className="fragrance-row">
-            <div className="fragrance-details">
-              <div className="fragrance-id">ID: {fragrance.id}</div>
-              <div className={"fragrance-main"}>
-                <strong>Name: {fragrance.name}</strong>
-                <span>Category: {fragrance.category}</span>
-              </div>
-              <div className="fragrance-desc">
-                Description: {fragrance.description}
-              </div>
-            </div>
-            <div className="fragrance-actions">
-              <Button
-                kind={Button.kinds.SECONDARY}
-                size={Button.sizes.XS}
-                onClick={() => handleEdit(fragrance)}
-              >
-                Edit
-              </Button>
-              <Button
-                onClick={() => handleDelete(fragrance.id)}
-                kind={Button.kinds.SECONDARY}
-                size={Button.sizes.XS}
-              >
-                Delete
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="fragrance-manager-container">
+    <div className="fragrance-manager">
+      <div className="fragrance-header">
         <Button
+          onClick={() => setShowForm(!showForm)}
           kind={Button.kinds.SECONDARY}
           size={Button.sizes.XS}
-          onClick={() => setShowManager(false)}
-          className="text-gray-500"
         >
-          Close
+          {showForm ? "Hide Form" : "Add New Fragrance"}
         </Button>
+      </div>
+
+      <div className="fragrance-content">
+        {showForm && (
+          <form onSubmit={handleSubmit} className="fragrance-form">
+            <TextField
+              name="id"
+              placeholder="ID"
+              value={formData.id?.toString() || ""}
+              onChange={handleTextChange("id")}
+              size={TextField.sizes.MEDIUM}
+            />
+            <TextField
+              name="fragrance_id"
+              placeholder="Fragrance ID"
+              value={formData.fragrance_id}
+              onChange={handleTextChange("fragrance_id")}
+              size={TextField.sizes.MEDIUM}
+            />
+            <TextField
+              name="name"
+              placeholder="Name"
+              value={formData.name}
+              onChange={handleTextChange("name")}
+              size={TextField.sizes.MEDIUM}
+              required
+            />
+            <Dropdown
+              placeholder="Select Category"
+              options={categories}
+              value={selectedCategory}
+              onChange={handleDropdownChange}
+              required
+            />
+            <TextField
+              name="description"
+              placeholder="Description"
+              value={formData.description}
+              onChange={handleTextChange("description")}
+              size={TextField.sizes.MEDIUM}
+              required
+            />
+            <Button
+              type="submit"
+              kind={Button.kinds.SECONDARY}
+              size={Button.sizes.XS}
+            >
+              {editingId ? "Update" : "Add"} Fragrance
+            </Button>
+          </form>
+        )}
+        <div className="fragrance-list">
+          {fragrances?.map((fragrance: Fragrance) => (
+            <div key={fragrance.id} className="fragrance-row">
+              <div className="fragrance-details">
+                <div className="fragrance-id">ID: {fragrance.id}</div>
+                <div className="fragrance-main">
+                  <strong>Name: {fragrance.name}</strong>
+                  <span>Category: {fragrance.category}</span>
+                </div>
+                <div className="fragrance-desc">
+                  Description: {fragrance.description}
+                </div>
+              </div>
+              <div className="fragrance-actions">
+                <Button
+                  kind={Button.kinds.SECONDARY}
+                  size={Button.sizes.XS}
+                  onClick={() => {
+                    handleEdit(fragrance);
+                    setShowForm(true);
+                  }}
+                >
+                  Edit
+                </Button>
+                <Button
+                  onClick={() => handleDelete(fragrance.id)}
+                  kind={Button.kinds.TERTIARY}
+                  size={Button.sizes.XS}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 };
-
 export default FragranceManager;
