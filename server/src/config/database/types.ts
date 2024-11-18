@@ -24,7 +24,10 @@ export interface Database {
   sequelize: Sequelize;
   Sequelize: typeof Sequelize;
   models: Record<string, ModelStatic<Model>>;
+  connect: () => Promise<void>;
+  disconnect: () => Promise<void>;
 }
+
 export interface DatabaseOperations extends Database {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
