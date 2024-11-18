@@ -1,5 +1,5 @@
 import { Sequelize, Model, DataTypes } from "sequelize";
-import { env } from "./environment.js";
+import { env } from "../environment/environment.js";
 
 const dbConfig = {
   dialect: "postgres",

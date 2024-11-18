@@ -18,9 +18,12 @@ import {
   FormData,
   ColumnValues,
   FragranceData,
+  ErrorProps,
   Label,
   initialState,
 } from "./types";
+
+import ErrorMessage from "../../Error/Error";
 
 import "./OrderForm.css";
 import useFragrances from "../../../hooks/useFragrances/useFragrances";
@@ -37,7 +40,7 @@ const OrderForm: React.FC = () => {
   const [activeTab, setActiveTab] = useState<number>(0);
   const { data, loading, error: fragranceError } = useFragrances(true);
   const [formData, setFormData] = useState<FormData>(initialState);
-  const [error, setError] = useState<Error | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleTabChange = (tabIndex: number) => {
     setActiveTab(tabIndex);
@@ -106,13 +109,19 @@ const OrderForm: React.FC = () => {
       } else {
         return undefined;
       }
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error("An error occurred"));
+      setErrorMessage(null);
+    } catch (error) {
+      if (error instanceof Error) {
+      } else {
+        setErrorMessage("An unexpected error occurred. Please try again.");
+        console.error("Unhandled error:", error);
+      }
     }
   };
 
   return (
     <div className="order-wrapper">
+      {errorMessage && <ErrorMessage message={errorMessage} />}
       <Flex
         justify={Flex.justify.START}
         align={Flex.align.CENTER}
@@ -124,8 +133,8 @@ const OrderForm: React.FC = () => {
           onTabChange={handleTabChange}
           className="order-tabs"
         >
-          <Tab id={0}>Order Details</Tab>
-          <Tab id={1}>Manage Fragrances</Tab>
+          <Tab tabInnerClassName="no-underline">Order Details</Tab>
+          <Tab tabInnerClassName="no-underline">Manage Fragrances</Tab>
         </TabList>
       </Flex>
       <Divider direction="horizontal" />

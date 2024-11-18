@@ -63,6 +63,7 @@ export type {
   ColumnValues,
   FragranceData,
   ErrorProps,
+  Label,
   OrderButtonProps,
 };
 export { initialState };

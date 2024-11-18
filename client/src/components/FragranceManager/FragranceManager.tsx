@@ -11,6 +11,7 @@ import {
 } from "./types";
 
 import "./FragranceManager.css";
+import ErrorMessage from "../Error/Error.js";
 
 const INITIAL_FORM_STATE: FormData = {
   id: null,
@@ -30,6 +31,7 @@ const FragranceManager: React.FC<FragranceManagerProps> = ({ onClose }) => {
   const [showForm, setShowForm] = useState<boolean>(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_STATE);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const selectedCategory = useMemo(
     () => categories.find((cat) => cat.value === formData.category) || null,
@@ -76,7 +78,13 @@ const FragranceManager: React.FC<FragranceManagerProps> = ({ onClose }) => {
       }
       resetForm();
       await refetch();
+      setErrorMessage(null);
     } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Error handling fragrance");
+      }
       console.error("Error handling fragrance:", error);
     }
   };
@@ -96,7 +104,13 @@ const FragranceManager: React.FC<FragranceManagerProps> = ({ onClose }) => {
     try {
       await fragranceApi.delete(id);
       await refetch();
+      setErrorMessage(null);
     } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Error deleting fragrance");
+      }
       console.error("Error deleting fragrance:", error);
     }
   };
@@ -104,6 +118,8 @@ const FragranceManager: React.FC<FragranceManagerProps> = ({ onClose }) => {
   return (
     <div className="fragrance-manager">
       <div className="fragrance-header">
+        {errorMessage && <ErrorMessage message={errorMessage} />}
+
         <Button
           onClick={() => setShowForm(!showForm)}
           kind={Button.kinds.SECONDARY}
@@ -153,11 +169,7 @@ const FragranceManager: React.FC<FragranceManagerProps> = ({ onClose }) => {
               size={TextField.sizes.MEDIUM}
               required
             />
-            <Button
-              type="submit"
-              kind={Button.kinds.SECONDARY}
-              size={Button.sizes.XS}
-            >
+            <Button kind={Button.kinds.SECONDARY} size={Button.sizes.XS}>
               {editingId ? "Update" : "Add"} Fragrance
             </Button>
           </form>

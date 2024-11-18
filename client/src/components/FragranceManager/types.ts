@@ -1,8 +1,5 @@
-import type {
-  TextFieldProps,
-  ButtonProps,
-  DropdownProps,
-} from "monday-ui-react-core";
+import { Button, TextField, Dropdown } from "monday-ui-react-core";
+import type { ComponentProps } from "react";
 
 export interface Fragrance {
   id: number;
@@ -20,6 +17,11 @@ export interface Category {
   value: string;
   label: string;
 }
+
+export type DropdownOption = {
+  value: string | number;
+  label: string;
+};
 
 export interface FormData {
   id: number | null;
@@ -46,14 +48,20 @@ export interface FormErrors {
   duplicate: boolean;
 }
 
-export type FragranceTextFieldProps = TextFieldProps & {
+export type FragranceTextFieldProps = ComponentProps<typeof TextField> & {
   name: keyof FormData;
 };
 
-export type FragranceDropdownProps = Omit<DropdownProps, "onChange"> & {
+export type FragranceDropdownProps = Omit<
+  ComponentProps<typeof Dropdown>,
+  "onChange"
+> & {
   onChange: (value: DropdownOption | null) => void;
 };
 
-export type FragranceButtonProps = Omit<ButtonProps, "onClick"> & {
+export type FragranceButtonProps = Omit<
+  ComponentProps<typeof Button>,
+  "onClick"
+> & {
   onClick?: () => void;
 };
