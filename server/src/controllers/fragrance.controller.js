@@ -24,13 +24,29 @@ export const fragranceController = {
 
   createFragrance: async (req, res) => {
     try {
-      const fragrance = await Fragrance.create(req.body);
+      const maxIdResult = await Fragrance.findOne({
+        order: [["id", "DESC"]],
+        attributes: ["id"],
+      });
+
+      const lastId = maxIdResult ? parseInt(maxIdResult.id) : 0;
+      const nextId = lastId + 1;
+      const paddedId = String(nextId).padStart(3, "0");
+
+      const fragranceData = {
+        ...req.body,
+        id: String(nextId),
+        fragrance_id: `FRAG-${paddedId}`,
+        image_url: req.body.image_url || "https://example.com/placeholder.jpg",
+      };
+
+      const fragrance = await Fragrance.create(fragranceData);
       res.status(201).json(fragrance);
     } catch (error) {
+      console.error("Create fragrance error:", error);
       res.status(400).json({ error: error.message });
     }
   },
-
   updateFragrance: async (req, res) => {
     try {
       const [updated] = await Fragrance.update(req.body, {
