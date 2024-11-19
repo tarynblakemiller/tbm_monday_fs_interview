@@ -4,10 +4,11 @@ import {
   errorHandler,
   notFoundHandler,
 } from "./middleware/index.ts";
-import orderRouter from "./routes/order.routes.js";
-import fragranceRouter from "./routes/fragrances.routes.js";
-import { validateConnection } from "./middleware/monday.middleware.js";
-import healthRouter from "./routes/health.routes.js";
+import orderRouter from "./routes/order.routes.ts";
+import fragranceRouter from "./routes/fragrances.routes.ts";
+import { validateConnection } from "./middleware/monday.middleware.ts";
+import createHealthRouter from "./routes/health.routes.ts";
+import { mondayService } from "./services/monday.service.ts";
 
 const app: Application = express();
 
@@ -16,9 +17,8 @@ app.use(validateConnection);
 
 app.use("/api/orders", orderRouter);
 app.use("/api/fragrances", fragranceRouter);
-app.use("/health", healthRouter);
+app.use("/health", createHealthRouter(mondayService));
 
-// Fix the route handler typing
 app.get("/", (_req: Request, res: Response) => {
   return res.json({ message: "Server is running!" });
 });

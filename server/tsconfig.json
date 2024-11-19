@@ -1,18 +1,22 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "lib": ["ES2020"],
     "rootDir": ".",
-    "outDir": "dist",
-    "baseUrl": ".",
+    "outDir": "./dist",
+    "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
-    "strict": true,
+
     "noImplicitAny": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
@@ -20,7 +24,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
 
-    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
 
@@ -30,16 +33,14 @@
     "allowJs": true,
     "checkJs": false,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
+    "emitDecoratorMetadata": true
   },
-  "include": ["src/**/*.ts", "src/**/*.js"],
+  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*"],
   "exclude": ["node_modules", "dist", "client"],
   "ts-node": {
     "files": true,
     "transpileOnly": true,
-    "esm": true
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
   }
 }

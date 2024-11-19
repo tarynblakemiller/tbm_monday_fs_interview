@@ -1,9 +1,12 @@
 import { Request, Response, NextFunction } from "express";
-import { mondayClient } from "../../index";
+import { Client } from "urql";
+import mondayClient from "@/services/monday/client";
 
 interface MondayApiResponse {
-  me: {
-    name: string;
+  data: {
+    me: {
+      name: string;
+    };
   };
 }
 
@@ -13,8 +16,15 @@ export const validateConnection = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const query = "query { me { name } }";
-    await mondayClient.api<MondayApiResponse>(query);
+    const query = `query { me { name } }`;
+    const response = await (mondayClient as Client)
+      .query<MondayApiResponse>(query, {})
+      .toPromise();
+
+    if (response.error) {
+      throw new Error(response.error.message);
+    }
+
     console.log("Monday.com connection was successful");
     next();
   } catch (error) {

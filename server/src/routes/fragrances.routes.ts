@@ -1,7 +1,7 @@
-import express from "express";
+import express, { Router } from "express";
 import { fragranceController } from "../controllers/fragrance.controller.js";
 
-const router = express.Router();
+const router: Router = express.Router();
 
 router.get("/", fragranceController.getFragrances);
 router.get("/:id", fragranceController.getFragrance);

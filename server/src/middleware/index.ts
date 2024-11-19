@@ -1,6 +1,6 @@
 import express, { Application, Request, Response, NextFunction } from "express";
 import cors from "cors";
-import { env } from "../config/environment/environment";
+import { env } from "@/config/database/config";
 
 interface Environment {
   CLIENT_URL: string;

@@ -61,8 +61,11 @@ const FragranceManager: React.FC<FragranceManagerProps> = ({ onClose }) => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     try {
+      if (!formData.name || !formData.category) {
+        setErrorMessage("Name and category are required");
+        return;
+      }
       const payload: Partial<Fragrance> = {
-        ...(formData.id && { id: formData.id }),
         fragrance_id: formData.fragrance_id,
         name: formData.name,
         category: formData.category,
@@ -169,8 +172,23 @@ const FragranceManager: React.FC<FragranceManagerProps> = ({ onClose }) => {
               size={TextField.sizes.MEDIUM}
               required
             />
-            <Button kind={Button.kinds.SECONDARY} size={Button.sizes.XS}>
+            <Button
+              type="submit"
+              kind={Button.kinds.SECONDARY}
+              size={Button.sizes.XS}
+            >
               {editingId ? "Update" : "Add"} Fragrance
+            </Button>
+            <Button
+              type="button"
+              kind={Button.kinds.TERTIARY}
+              size={Button.sizes.XS}
+              onClick={() => {
+                resetForm();
+                setShowForm(false);
+              }}
+            >
+              Cancel
             </Button>
           </form>
         )}

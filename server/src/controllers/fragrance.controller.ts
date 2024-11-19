@@ -1,43 +1,50 @@
 import { Request, Response } from "express";
-import db from "../config/database";
-import { IFragrance } from "../types/fragrance.types";
+import { db } from "../config/database";
+import {
+  IFragranceData,
+  IFragranceComplete,
+} from "../migrations/types/fragrance";
 
-const { Fragrance } = db;
+const { Fragrance } = db.models;
 
 type FragranceParams = { id: string };
-type CreateFragranceDTO = Omit<
-  IFragrance,
-  "id" | "fragrance_id" | "created_at" | "updated_at"
->;
+type CreateFragranceDTO = Omit<IFragranceData, "id" | "fragrance_id">;
 type UpdateFragranceDTO = Partial<CreateFragranceDTO>;
 
 export const fragranceController = {
-  getFragrances: async (_req: Request, res: Response<IFragrance[]>) => {
+  getFragrances: async (
+    _req: Request,
+    res: Response<IFragranceComplete[] | { error: string }>
+  ) => {
     try {
       const fragrances = await Fragrance.findAll();
-      res.json(fragrances);
+      res.json(fragrances.map((f) => f.toJSON() as IFragranceComplete));
     } catch (error) {
-      res.status(500).json({ error: error.message } as any);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      res.status(500).json({ error: errorMessage });
     }
   },
 
   getFragrance: async (
     req: Request<FragranceParams>,
-    res: Response<IFragrance | { error: string }>
+    res: Response<IFragranceComplete | { error: string }>
   ) => {
     try {
       const fragrance = await Fragrance.findByPk(req.params.id);
       if (!fragrance)
         return res.status(404).json({ error: "Fragrance not found" });
-      res.json(fragrance);
+      res.json(fragrance.toJSON() as IFragranceComplete);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      res.status(500).json({ error: errorMessage });
     }
   },
 
   createFragrance: async (
     req: Request<{}, {}, CreateFragranceDTO>,
-    res: Response<IFragrance | { error: string }>
+    res: Response<IFragranceComplete | { error: string }>
   ) => {
     try {
       const maxIdResult = await Fragrance.findOne({
@@ -46,29 +53,30 @@ export const fragranceController = {
       });
 
       const lastId = maxIdResult ? parseInt(maxIdResult.id) : 0;
-      const nextId = lastId + 1;
-      const paddedId = String(nextId).padStart(3, "0");
+      const ids = Fragrance.generateIds(lastId);
 
       const fragranceData = {
         ...req.body,
-        id: String(nextId),
-        fragrance_id: `FRAG-${paddedId}`,
+        ...ids,
         image_url: req.body.image_url || "https://example.com/placeholder.jpg",
       };
 
       const fragrance = await Fragrance.create(fragranceData);
-      res.status(201).json(fragrance);
+      res.status(201).json(fragrance.toJSON() as IFragranceComplete);
     } catch (error) {
       console.error("Create fragrance error:", error);
-      res.status(400).json({ error: error.message });
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      res.status(400).json({ error: errorMessage });
     }
   },
 
   updateFragrance: async (
     req: Request<FragranceParams, {}, UpdateFragranceDTO>,
-    res: Response<IFragrance | { error: string }>
+    res: Response<IFragranceComplete | { error: string }>
   ) => {
     try {
+      console.log(req, "REQEST");
       const [updated] = await Fragrance.update(req.body, {
         where: { id: req.params.id },
       });
@@ -76,9 +84,13 @@ export const fragranceController = {
         return res.status(404).json({ error: "Fragrance not found" });
 
       const fragrance = await Fragrance.findByPk(req.params.id);
-      res.json(fragrance!);
+      if (!fragrance)
+        return res.status(404).json({ error: "Fragrance not found" });
+      res.json(fragrance.toJSON() as IFragranceComplete);
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      res.status(400).json({ error: errorMessage });
     }
   },
 
@@ -94,7 +106,9 @@ export const fragranceController = {
         return res.status(404).json({ error: "Fragrance not found" });
       res.json({ message: "Fragrance deleted successfully" });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      res.status(500).json({ error: errorMessage });
     }
   },
 };

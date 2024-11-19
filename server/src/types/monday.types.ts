@@ -1,72 +1,64 @@
-// monday.types.ts
-import mondaySdk from "monday-sdk-js";
-import { OperationResult } from "urql";
-
-export type MondayClient = ReturnType<typeof mondaySdk>;
-
-export interface ColumnValue {
+export interface MondayColumnValue {
   id: string;
-  text: string | null;
-  value: string | null;
+  text: string;
+  value: string;
+  type?: string;
 }
 
 export interface MondayItem {
   id: string;
   name: string;
-  column_values: ColumnValue[];
+  column_values: MondayColumnValue[];
 }
 
-export interface CreateItemInput {
-  boardId: string;
-  columnValues: Record<string, any> | string;
-  groupId?: string;
-  itemName?: string;
-}
-
-export interface UpdateItemInput {
-  boardId: string;
-  itemId: string;
-  columnId: string;
-  value: string;
-}
-
-// Response types for specific operations
-export type ItemResponse = OperationResult<
-  {
+export interface ItemResponse {
+  data: {
     create_item?: { id: string };
     change_column_value?: { id: string };
     delete_item?: { id: string };
-  },
-  {
-    boardId?: string;
-    groupId?: string;
-    itemName?: string;
-    columnValues?: string;
-    itemId?: string;
-    columnId?: string;
-    value?: string;
-  }
->;
+  };
+}
 
-export type BoardResponse = OperationResult<
-  {
+export interface BoardResponse {
+  data: {
     boards: Array<{
       items?: MondayItem[];
       columns?: Array<{
         id: string;
         title: string;
-        type?: string;
-        settings_str?: string;
+        type: string;
       }>;
       groups?: Array<{
         id: string;
         title: string;
-        items: Array<{ id: string; name: string }>;
+        items: Array<{
+          id: string;
+          name: string;
+        }>;
       }>;
     }>;
-  },
-  {
-    boardId: string;
-    columnId?: string;
-  }
->;
+  };
+}
+
+export interface CreateItemInput {
+  boardId: string;
+  itemName?: string;
+  columnValues: Record<string, any> | string;
+  groupId?: string;
+}
+
+export interface UpdateItemInput {
+  boardId: string;
+  itemId: string;
+  columnId?: string;
+  columnValues?: Record<string, any>;
+}
+
+export interface MondayClient {
+  setToken: (token: string) => void;
+  setApiVersion: (version: string) => void;
+  api: (
+    query: string,
+    options?: { variables: Record<string, any> }
+  ) => Promise<any>;
+}

@@ -1,17 +1,17 @@
-import app from "@/app";
+import app from "./app";
+import { db } from "./config/database";
 import dotenv from "dotenv";
-import { db } from "./src/config/database/index";
-const mondaySdk = require("monday-sdk-js/dist/monday-sdk-server");
-import { initializeDatabase } from "@/config/init";
-import { MondayClient } from "./src/types/monday.types";
-import { env } from "@/types/environment.types";
+import { initializeDatabase } from "./config/init";
+import mondaySdk from "monday-sdk-js";
+import { MondayClient } from "./types/monday.types";
+import { env } from "./types/environment.types";
 
 dotenv.config();
 const PORT = env.PORT;
 
-export const mondayClient: MondayClient = mondaySdk();
-mondayClient.setToken(process.env.MONDAY_API_TOKEN || "");
-mondayClient.setApiVersion("2024-10");
+export const mondayApiClient: MondayClient = mondaySdk();
+mondayApiClient.setToken(env.MONDAY_API_TOKEN || "");
+mondayApiClient.setApiVersion("2024-10");
 
 const startServer = async (): Promise<void> => {
   try {

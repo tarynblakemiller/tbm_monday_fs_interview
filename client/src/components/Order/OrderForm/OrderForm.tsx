@@ -14,14 +14,7 @@ import { OrderHeader } from "../OrderHeader/OrderHeader";
 import MultiSelect from "../../MultiSelect/MultiSelect";
 import Error from "../../Error/Error";
 import FragranceManager from "../../FragranceManager/FragranceManager";
-import {
-  FormData,
-  ColumnValues,
-  FragranceData,
-  ErrorProps,
-  Label,
-  initialState,
-} from "./types";
+import { FormData, Label, initialState } from "./types";
 
 import ErrorMessage from "../../Error/Error";
 
@@ -142,7 +135,7 @@ const OrderForm: React.FC = () => {
       {activeTab === 0 ? (
         <TabPanel id={0}>
           <div className="order-maker-container">
-            {error && <Error message={error.message} />}
+            {errorMessage && <Error message={errorMessage} />}
             <form onSubmit={handleSubmit} className="input-field-container">
               <div className="input-grid-container">
                 <div className="input-item">

@@ -1,4 +1,5 @@
-import { Options, Sequelize, Model, ModelStatic } from "sequelize";
+import { Options, Sequelize } from "sequelize";
+import { Fragrance } from "@/models/fragrance.model";
 
 export interface DatabaseConfig extends Options {
   dialect: "postgres";
@@ -23,11 +24,12 @@ export interface ModelDefinition {
 export interface Database {
   sequelize: Sequelize;
   Sequelize: typeof Sequelize;
-  models: Record<string, ModelStatic<Model>>;
+  models: {
+    Fragrance: typeof Fragrance;
+  };
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
 }
-
 export interface DatabaseOperations extends Database {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;

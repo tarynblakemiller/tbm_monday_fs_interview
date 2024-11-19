@@ -1,10 +1,12 @@
 export interface IFragrance {
-  id: number;
+  id: string;
   fragrance_id: string;
   name: string;
-  description: string | null;
-  category: string;
-  image_url: string | null;
+  description?: string;
+  category?: string;
+  price?: number;
+  stock?: number;
+  image_url?: string;
   created_at?: Date;
   updated_at?: Date;
 }
